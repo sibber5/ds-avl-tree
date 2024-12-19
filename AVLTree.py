@@ -17,7 +17,7 @@ class AVLNode(object):
 	@type value: string
 	@param value: data of your node
 	"""
-	def __init__(self, key, value):
+	def __init__(self, key: int, value: str):
 		self.key = key
 		self.value = value
 		self._left = None
@@ -52,21 +52,21 @@ class AVLNode(object):
 			raise ValueError("Node height value is incorrect.")
 
 
-	def compute_height(self):
-		leftHeight = -1 if self.left is None else self.left.compute_height()
-		rightHeight = -1 if self.right is None else self.right.compute_height()
-		return max(leftHeight, rightHeight) + 1
+	def compute_height(self) -> int:
+		left_height = -1 if self.left is None else self.left.compute_height()
+		right_height = -1 if self.right is None else self.right.compute_height()
+		return max(left_height, right_height) + 1
 
 
-	def balance_factor(self):
-		leftHeight = -1 if self.left is None else self.left.height
-		rightHeight = -1 if self.right is None else self.right.height
+	"""
+	@returns: height of left node - height of right note.
+	"""
+	@property
+	def balance_factor(self) -> int:
+		left_height = -1 if self.left is None else self.left.height
+		right_height = -1 if self.right is None else self.right.height
 		
-		balance_factor = leftHeight - rightHeight
-		if balance_factor not in [-1, 0, 1]:
-			raise ValueError('Unexpected balance factor value: ' + balance_factor)
-		
-		return balance_factor
+		return left_height - right_height
 
 
 	"""returns whether self is not a virtual node 
@@ -74,7 +74,7 @@ class AVLNode(object):
 	@rtype: bool
 	@returns: False if self is a virtual node, True otherwise.
 	"""
-	def is_real_node(self):
+	def is_real_node(self) -> bool:
 		return False
 
 
