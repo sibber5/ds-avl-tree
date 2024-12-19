@@ -5,6 +5,7 @@
 #name2:
 #username2:
 
+from typing import Self
 
 """A class represnting a node in an AVL tree"""
 
@@ -19,11 +20,54 @@ class AVLNode(object):
 	def __init__(self, key, value):
 		self.key = key
 		self.value = value
-		self.left = None
-		self.right = None
+		self._left = None
+		self._right = None
 		self.parent = None
-		self.height = -1
+		self.height = 0
+
+
+	@property
+	def left(self):
+		return self._left
+	
+	@left.setter
+	def left(self, val: Self):
+		val.parent = self
+		self._left = val
+		self.height = max(self.left.height, self.right.height) + 1
+		if self.height != self.compute_height():
+			raise ValueError("Node height value is incorrect.")
+	
+
+	@property
+	def right(self):
+		return self._right
+	
+	@right.setter
+	def right(self, val: Self):
+		val.parent = self
+		self._right = val
+		self.height = max(self.left.height, self.right.height) + 1
+		if self.height != self.compute_height():
+			raise ValueError("Node height value is incorrect.")
+
+
+	def compute_height(self):
+		leftHeight = -1 if self.left is None else self.left.compute_height()
+		rightHeight = -1 if self.right is None else self.right.compute_height()
+		return max(leftHeight, rightHeight) + 1
+
+
+	def balance_factor(self):
+		leftHeight = -1 if self.left is None else self.left.height
+		rightHeight = -1 if self.right is None else self.right.height
 		
+		balance_factor = leftHeight - rightHeight
+		if balance_factor not in [-1, 0, 1]:
+			raise ValueError('Unexpected balance factor value: ' + balance_factor)
+		
+		return balance_factor
+
 
 	"""returns whether self is not a virtual node 
 
