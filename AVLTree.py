@@ -14,88 +14,135 @@ class AVLNode(object):
 	"""Constructor, you are allowed to add more fields. 
 	
 	@type key: int
-	@param key: key of your node
+	@param key: key of your node. creates virtual node if None is passed.
 	@type value: string
 	@param value: data of your node
 	"""
-	def __init__(self, key: int, value: str):
-		self.key = key
-		self.value = value
-		self._left = None
-		self._right = None
-		self._parent = None
-		self.height = 0
+	def __init__(self, key: int, value: str, leftNode: Self = None, rightNode: Self = None):
+		if key is None:
+			self.key = None
+			self._parent = None
+			self._height = -1
+		else:
+			self.key = key
+			self.value = value
+			self._left = None
+			self._right = None
+			self._parent = None
+			self._height = 0
 
+			self.left = leftNode
+			self.right = rightNode
+
+	@classmethod
+	def virtual(cls):
+		return cls(None, None)
 
 	@property
-	def left(self):
+	def left(self) -> Self:
+		self._raise_if_virtual_node()
 		return self._left
 	
 	@left.setter
-	def left(self, val: Self):
-		self._left = val
-		val.parent = self
+	def left(self, val: (Self | None)):
+		self._raise_if_virtual_node()
+		if val is None:
+			# when constructing
+			if self._left is None:
+				self._left = AVLNode.virtual()
+				return
 
-		if self.height != self.compute_height():
-			raise ValueError("Node height value is incorrect.")
+			if not self._left.is_real_node:
+				return
+			
+			val = AVLNode.virtual()
+		
+		self._left._set_parent(None)
+		self._left = val
+		val._set_parent(self)
 	
 
 	@property
-	def right(self):
+	def right(self) -> Self:
+		self._raise_if_virtual_node()
 		return self._right
 	
 	@right.setter
-	def right(self, val: Self):
+	def right(self, val: (Self | None)):
+		self._raise_if_virtual_node()
+		if val is None:
+			# when constructing
+			if self._right is None:
+				self._right = AVLNode.virtual()
+				return
+			
+			if not self._right.is_real_node:
+				return
+			
+			val = AVLNode.virtual()
+		
+		self._right._set_parent(None)
 		self._right = val
-		val.parent = self
-
-		if self.height != self.compute_height():
-			raise ValueError("Node height value is incorrect.")
+		val._set_parent(self)
 
 
 	@property
 	def parent(self):
 		return self._parent
 	
-	@parent.setter
-	def parent(self, val: Self):
+	def _set_parent(self, val: (Self | None)):
+		if val is not None and not val.is_real_node:
+			raise ValueError("Node parent cannot be a virtual node.")
+		
 		self._parent = val
 		AVLNode._update_parent_heights(self)
 
 
+	@property
+	def height(self):
+		if self._height != self.compute_height():
+			raise ValueError("Node height value is incorrect.")
+		return self._height
+
+
 	"""
-	@returns: height of left node - height of right note.
+	@returns: (height of left node) - (height of right node).
 	"""
 	@property
 	def balance_factor(self):
-		left_height = -1 if self.left is None else self.left.height
-		right_height = -1 if self.right is None else self.right.height
-		
-		return left_height - right_height
+		self._raise_if_virtual_node()
+		return self.left.height - self.right.height
 
 
-	"""returns whether self is not a virtual node 
-
-	@rtype: bool
+	"""
 	@returns: False if self is a virtual node, True otherwise.
 	"""
-	def is_real_node(self) -> bool:
-		return False
+	@property
+	def is_real_node(self):
+		return self.key is not None
 	
+
+	def _raise_if_virtual_node(self):
+		if not self.is_real_node:
+			raise RuntimeError("Invalid operation on virtual node.")
+
 	
+	# TODO: remove before submitting
 	def compute_height(self) -> int:
-		left_height = -1 if self.left is None else self.left.compute_height()
-		right_height = -1 if self.right is None else self.right.compute_height()
-		return max(left_height, right_height) + 1
+		if not self.is_real_node:
+			return -1
+		
+		return max(self.left.compute_height(), self.right.compute_height()) + 1
 
 
 	@staticmethod
 	def _update_parent_heights(node: Self):
+		node = node.parent
 		while node is not None:
-			left_height = -1 if node.left is None else node.left.height
-			right_height = -1 if node.right is None else node.right.height
-
-			node.height = max(left_height, right_height) + 1
+			new_height = max(node.left.height, node.right.height) + 1
+			if node._height == new_height:
+				break
+			node._height = new_height
 			node = node.parent
 
 
