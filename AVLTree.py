@@ -5,7 +5,7 @@
 #name2:
 #username2:
 
-from typing import Self
+from typing import Self, Tuple
 
 """A class represnting a node in an AVL tree"""
 
@@ -99,7 +99,7 @@ class AVLTree(object):
 	@returns: a tuple (x,e) where x is the node corresponding to key (or None if not found),
 	and e is the number of edges on the path between the starting node and ending node+1.
 	"""
-	def search(self, key):
+	def search(self, key: int) -> Tuple[AVLNode, int]:
 		return None, -1
 
 
@@ -111,7 +111,7 @@ class AVLTree(object):
 	@returns: a tuple (x,e) where x is the node corresponding to key (or None if not found),
 	and e is the number of edges on the path between the starting node and ending node+1.
 	"""
-	def finger_search(self, key):
+	def finger_search(self, key: int) -> Tuple[AVLNode, int]:
 		return None, -1
 
 
@@ -127,7 +127,7 @@ class AVLTree(object):
 	e is the number of edges on the path between the starting node and new node before rebalancing,
 	and h is the number of PROMOTE cases during the AVL rebalancing
 	"""
-	def insert(self, key, val):
+	def insert(self, key: int, val: str) -> Tuple[AVLNode, int, int]:
 		return None, -1, -1
 
 
@@ -143,7 +143,7 @@ class AVLTree(object):
 	e is the number of edges on the path between the starting node and new node before rebalancing,
 	and h is the number of PROMOTE cases during the AVL rebalancing
 	"""
-	def finger_insert(self, key, val):
+	def finger_insert(self, key: int, val: str) -> Tuple[AVLNode, int, int]:
 		return None, -1, -1
 
 
@@ -152,7 +152,7 @@ class AVLTree(object):
 	@type node: AVLNode
 	@pre: node is a real pointer to a node in self
 	"""
-	def delete(self, node):
+	def delete(self, node: AVLNode):
 		return	
 
 	
@@ -167,7 +167,7 @@ class AVLTree(object):
 	@pre: all keys in self are smaller than key and all keys in tree2 are larger than key,
 	or the opposite way
 	"""
-	def join(self, tree2, key, val):
+	def join(self, tree2: Self, key: int, val: str):
 		return
 
 
@@ -181,7 +181,7 @@ class AVLTree(object):
 	dictionary smaller than node.key, and right is an AVLTree representing the keys in the 
 	dictionary larger than node.key.
 	"""
-	def split(self, node):
+	def split(self, node: AVLNode) -> Tuple[Self, Self]:
 		return None, None
 
 	
@@ -190,7 +190,7 @@ class AVLTree(object):
 	@rtype: list
 	@returns: a sorted list according to key of touples (key, value) representing the data structure
 	"""
-	def avl_to_array(self):
+	def avl_to_array(self) -> list:
 		return None
 
 
@@ -199,7 +199,7 @@ class AVLTree(object):
 	@rtype: AVLNode
 	@returns: the maximal node, None if the dictionary is empty
 	"""
-	def max_node(self):
+	def max_node(self) -> AVLNode:
 		return None
 
 	"""returns the number of items in dictionary 
@@ -207,7 +207,7 @@ class AVLTree(object):
 	@rtype: int
 	@returns: the number of items in dictionary 
 	"""
-	def size(self):
+	def size(self) -> int:
 		return -1	
 
 
@@ -216,5 +216,5 @@ class AVLTree(object):
 	@rtype: AVLNode
 	@returns: the root, None if the dictionary is empty
 	"""
-	def get_root(self):
+	def get_root(self) -> AVLNode:
 		return None
