@@ -155,8 +155,9 @@ class AVLTree(object):
 	"""
 	Constructor, you are allowed to add more fields.
 	"""
-	def __init__(self):
-		self.root = None
+	def __init__(self, root: (AVLNode | None) = None):
+		self.root = root
+		# TODO: balance root if unbalanced
 
 
 	"""searches for a node in the dictionary corresponding to the key (starting at the root)
@@ -172,7 +173,7 @@ class AVLTree(object):
 
 	@staticmethod
 	def _search_rec(node: AVLNode, e: int, key: int):
-		if node is None:
+		if not AVLTree._is_real_node(node):
 			return None, e
 
 		if node.key == key:
@@ -272,7 +273,18 @@ class AVLTree(object):
 	@returns: a sorted list according to key of touples (key, value) representing the data structure
 	"""
 	def avl_to_array(self) -> list:
-		return None
+		list = []
+		AVLTree._avl_to_array_rec(self.root, list)
+		return list
+	
+	@staticmethod
+	def _avl_to_array_rec(node: AVLNode, list: list):
+		if not AVLTree._is_real_node(node):
+			return
+		
+		AVLTree._avl_to_array_rec(node.left, list)
+		list.append(node.value)
+		AVLTree._avl_to_array_rec(node.right, list)
 
 
 	"""returns the node with the maximal key in the dictionary
@@ -281,7 +293,10 @@ class AVLTree(object):
 	@returns: the maximal node, None if the dictionary is empty
 	"""
 	def max_node(self) -> AVLNode:
-		return None
+		node = self.root
+		while AVLTree._is_real_node(node):
+			node = node.right
+		return node
 
 	"""returns the number of items in dictionary 
 
@@ -298,4 +313,9 @@ class AVLTree(object):
 	@returns: the root, None if the dictionary is empty
 	"""
 	def get_root(self) -> AVLNode:
-		return None
+		return self.root
+	
+
+	@staticmethod
+	def _is_real_node(node: (AVLNode | None)):
+		return node is not None and node.is_real_node
