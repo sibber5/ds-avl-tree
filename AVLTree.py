@@ -154,8 +154,8 @@ class AVLNode(object):
 		x.right = T2
 
 		# Update heights
-		x.height = 1 + max(height(x.left), height(x.right))
-		y.height = 1 + max(height(y.left), height(y.right))
+		x._height = 1 + max(compute_height(x.left), compute_height(x.right))
+		y._height = 1 + max(compute_height(y.left), compute_height(y.right))
 
 		# Return new root
 		return y
@@ -169,8 +169,8 @@ class AVLNode(object):
 		y.left = T2
 
 		# Update heights
-		y.height = 1 + max(height(y.left), height(y.right))
-		x.height = 1 + max(height(x.left), height(x.right))
+		y._height = 1 + max(compute_height(y.left), compute_height(y.right))
+		x._height = 1 + max(compute_height(x.left), compute_height(x.right))
 
 		# Return new root
 		return x
