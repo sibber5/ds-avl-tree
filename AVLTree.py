@@ -145,6 +145,39 @@ class AVLNode(object):
 			node._height = new_height
 			node = node.parent
 
+	def left_rotate(x):
+		y = x.right
+		T2 = y.left
+
+		# Perform rotation
+		y.left = x
+		x.right = T2
+
+		# Update heights
+		x.height = 1 + max(height(x.left), height(x.right))
+		y.height = 1 + max(height(y.left), height(y.right))
+
+		# Return new root
+		return y
+
+	def right_rotate(y):
+		x = y.left
+		T2 = x.right
+
+		# Perform rotation
+		x.right = y
+		y.left = T2
+
+		# Update heights
+		y.height = 1 + max(height(y.left), height(y.right))
+		x.height = 1 + max(height(x.left), height(x.right))
+
+		# Return new root
+		return x
+
+
+
+
 
 """
 A class implementing an AVL tree.
@@ -209,6 +242,8 @@ class AVLTree(object):
 	e is the number of edges on the path between the starting node and new node before rebalancing,
 	and h is the number of PROMOTE cases during the AVL rebalancing
 	"""
+
+
 	def insert(self, key: int, val: str) -> Tuple[AVLNode, int, int]:
 		return None, -1, -1
 
