@@ -126,36 +126,61 @@ class AVLNode(object):
         return max(self.left.compute_height(), self.right.compute_height()) + 1
 
     def ll_rotate(self):
-        valid = self.balance_factor == 2 \
-                and self.left.is_real_node and not self.right.is_real_node \
-                and self.left.left.is_real_node and not self.left.right.is_real_node \
-                and self.left.left.height == 0
+        valid = self.balance_factor > 1 and self.left.is_real_node and self.left.balance_factor > 0
         if not valid:
             raise ValueError()
-
-    def lr_rotate(self):
-        valid = self.balance_factor == 2 \
-                and self.left.is_real_node and not self.right.is_real_node \
-                and not self.left.left.is_real_node and self.left.right.is_real_node \
-                and self.left.right.height == 0
-        if not valid:
-            raise ValueError()
-
-    def rl_rotate(self):
-        valid = self.balance_factor == -2 \
-                and not self.left.is_real_node and self.right.is_real_node \
-                and self.right.left.is_real_node and not self.right.right.is_real_node \
-                and self.right.left.height == 0
-        if not valid:
-            raise ValueError()
+        
+        self._rotate_left()
 
     def rr_rotate(self):
-        valid = self.balance_factor == -2 \
-                and not self.left.is_real_node and self.right.is_real_node \
-                and not self.right.left.is_real_node and self.right.right.is_real_node \
-                and self.right.right.height == 0
+        valid = self.balance_factor < -1 and self.right.is_real_node and self.right.balance_factor < 0
         if not valid:
             raise ValueError()
+        
+        self._rotate_right()
+
+    def lr_rotate(self):
+        valid = self.balance_factor > 1 and self.left.is_real_node and self.left.balance_factor < 0 and self.right.is_real_node
+        if not valid:
+            raise ValueError()
+        
+        self.left._rotate_left()
+        self._rotate_right()
+
+    def rl_rotate(self):
+        valid = self.balance_factor < -1 and self.right.is_real_node and self.right.balance_factor > 0 and self.left.is_real_node
+        if not valid:
+            raise ValueError()
+        
+        self.right._rotate_right()
+        self._rotate_left()
+
+    def _rotate_left(self):
+        left = self.left
+        right_of_left = left.right
+        AVLNode.set_child_of_parent(self, left)
+        left.right = self
+        self.left = right_of_left
+    
+    def _rotate_right(self):
+        right = self.right # right was promoted
+        left_of_right = right.left
+        AVLNode.set_child_of_parent(self, right)
+        right.left = self
+        self.right = left_of_right # was left of right promoted?
+
+    """Sets the child to refer to a different node, i.e. (parent = `child.parent`) if parent.x (where x is 'left' or 'right') is `child`, parent.x will be set to `node`"""
+    @staticmethod
+    def set_child_of_parent(child: 'AVLNode', node: 'AVLNode'):
+        parent = child.parent
+        
+        if parent is None:
+            return
+        
+        if parent.left is child:
+            parent.left = node
+        else:
+            parent.right = node
 
     @staticmethod
     def _update_parent_heights(node: 'AVLNode'):
@@ -257,17 +282,18 @@ class AVLTree(object):
             return parent, e, 0
 
         new_node = AVLNode(key, val)
-        h = 0
 
         if key < parent.key:
             parent.left = new_node
         else:
             parent.right = new_node
-        self.balance(new_node)
+        
+        h = self.balance(new_node)
+        
         return new_node, e, h
 
     # Balances the first subtree up from the passed node
-    def balance(self, node: AVLNode):
+    def balance(self, node: AVLNode) -> int:
         if node.left.is_real_node or node.right.is_real_node:
             raise ValueError('Parameter "node" must be a leaf.')
 
@@ -279,16 +305,23 @@ class AVLTree(object):
             child = node
             node = node.parent
 
+        if node is None:
+            return
+
         if node.balance_factor > 0:
             if child.balance_factor > 0:
                 node.ll_rotate()
+                return 1
             else:
                 node.lr_rotate()
+                return 2
         else:
             if child.balance_factor > 0:
                 node.rl_rotate()
+                return 2
             else:
                 node.rr_rotate()
+                return 1
 
     """inserts a new node into the dictionary with corresponding key and value, starting at the max
 
@@ -325,7 +358,16 @@ class AVLTree(object):
     or the opposite way
     """
     def join(self, tree2: Self, key: int, val: str):
-        return
+        def _insert_nodes(node: AVLNode, tree: Self):
+            if not is_real(node):
+                return
+
+            _insert_nodes(node.left, tree)
+            tree.insert(node)
+            _insert_nodes(node.right, tree)
+        
+        self.insert(AVLNode(key, val))
+        _insert_nodes(tree2.get_root(), self)
 
     """splits the dictionary at a given node
 
@@ -351,13 +393,12 @@ class AVLTree(object):
                 return
 
             _avl_to_array(node.left, list)
-            list.append(node.value)
+            list.append((node.key, node.value))
             _avl_to_array(node.right, list)
         
         lst = []
         _avl_to_array(self.root, lst)
         return lst
-
 
     """returns the node with the maximal key in the dictionary
 
