@@ -97,8 +97,7 @@ class AVLNode(object):
 
     @property
     def height(self):
-        if self._height != self.compute_height():
-            raise ValueError('Node height value is incorrect.')
+        assert self._height == self.compute_height()
         return self._height
 
     """
@@ -127,37 +126,7 @@ class AVLNode(object):
 
         return max(self.left.compute_height(), self.right.compute_height()) + 1
 
-    def ll_rotate(self):
-        valid = self.balance_factor > 1 and self.left.is_real_node and self.left.balance_factor > 0
-        if not valid:
-            raise ValueError()
-        
-        self._rotate_right()
-
-    def rr_rotate(self):
-        valid = self.balance_factor < -1 and self.right.is_real_node and self.right.balance_factor < 0
-        if not valid:
-            raise ValueError()
-        
-        self._rotate_left()
-
-    def lr_rotate(self):
-        valid = self.balance_factor > 1 and self.left.is_real_node and self.left.balance_factor < 0 and self.left.right.is_real_node
-        if not valid:
-            raise ValueError()
-        
-        self.left._rotate_left()
-        self._rotate_right()
-
-    def rl_rotate(self):
-        valid = self.balance_factor < -1 and self.right.is_real_node and self.right.balance_factor > 0 and self.right.left.is_real_node
-        if not valid:
-            raise ValueError()
-        
-        self.right._rotate_right()
-        self._rotate_left()
-
-    def _rotate_right(self):
+    def rotate_right(self):
         left = self.left
         right_of_left = left.right
 
@@ -165,12 +134,12 @@ class AVLNode(object):
         self.left = right_of_left
         left.right = self
     
-    def _rotate_left(self):
+    def rotate_left(self):
         right = self.right # right was promoted
         left_of_right = right.left
 
         _set_child_of_parent(self, right)
-        self.right = left_of_right # was left of right promoted?
+        self.right = left_of_right # TODO: was left of right promoted?
         right.left = self
 
 """Sets the child to refer to a different node, i.e. (parent = `child.parent`) if parent.x (where x is 'left' or 'right') is `child`, parent.x will be set to `node`"""
@@ -204,8 +173,11 @@ class AVLTree(object):
     """
     def __init__(self, root: (AVLNode | None) = None):
         self.root = root
+        self._max = None
 
-    # TODO: balance root if unbalanced
+        if self.root is not None:
+            assert not self.root.left.is_real_node and not self.root.right.is_real_node
+            self._max = self.root
 
     """searches for a node in the dictionary corresponding to the key (starting at the root)
         
@@ -216,7 +188,7 @@ class AVLTree(object):
     and e is the number of edges on the path between the starting node and ending node+1.
     """
     def search(self, key: int) -> Tuple[AVLNode, int]:
-        (x, e, found) = AVLTree._search_rec(None, self.root, 1, key)
+        (x, e, found) = AVLTree._search_core(None, self.root, 1, key)
         if not found:
             x = None
         return x, e
@@ -225,7 +197,7 @@ class AVLTree(object):
     @returns: a tuple (x, e, found) where x is the node if found, else last node checked
     """
     @staticmethod
-    def _search_rec(parent: (AVLNode | None), node: AVLNode, e: int, key: int) -> Tuple[AVLNode, int, bool]:
+    def _search_core(parent: (AVLNode | None), node: AVLNode, e: int, key: int) -> Tuple[AVLNode, int, bool]:
         if not _is_real(node):
             return parent, e, False
 
@@ -233,9 +205,9 @@ class AVLTree(object):
             return node, e, True
 
         if node.key > key:
-            return AVLTree._search_rec(node, node.left, e + 1, key)
+            return AVLTree._search_core(node, node.left, e + 1, key)
 
-        return AVLTree._search_rec(node, node.right, e + 1, key)
+        return AVLTree._search_core(node, node.right, e + 1, key)
 
     """searches for a node in the dictionary corresponding to the key, starting at the max
         
@@ -246,10 +218,10 @@ class AVLTree(object):
     and e is the number of edges on the path between the starting node and ending node+1.
     """
     def finger_search(self, key: int) -> Tuple[AVLNode, int]:
-        return AVLTree._search_from_max(self.max_node(), key, 0)
+        return AVLTree._finger_search_core(self.max_node(), key, 0)
 
     @staticmethod
-    def _search_from_max(self, node, key, depth):
+    def _finger_search_core(self, node, key, depth):
         if node is None:
             return None, depth
 
@@ -277,7 +249,7 @@ class AVLTree(object):
     and h is the number of PROMOTE cases during the AVL rebalancing
     """
     def insert(self, key: int, val: str) -> Tuple[AVLNode, int, int]:
-        parent, e, found = AVLTree._search_rec(None, self.root, 1, key)
+        parent, e, found = AVLTree._search_core(None, self.root, 1, key)
 
         if found:
             parent.value = val
@@ -290,12 +262,15 @@ class AVLTree(object):
         else:
             parent.right = new_node
         
-        h = self.balance(new_node)
+        h = self.rebalance(new_node)
         
+        if new_node.key > self._max.key:
+            self._max = new_node
+
         return new_node, e, h
 
     # Balances the first subtree up from the passed node
-    def balance(self, node: AVLNode) -> int:
+    def rebalance(self, node: AVLNode) -> int:
         if node.left.is_real_node or node.right.is_real_node:
             raise ValueError('Parameter "node" must be a leaf.')
 
@@ -312,18 +287,24 @@ class AVLTree(object):
 
         h = -1
         if node.balance_factor > 0:
-            if child.balance_factor > 0:
-                node.ll_rotate()
+            if child.balance_factor > 0: # LL imbalance
+                assert node.balance_factor > 1 and node.left.is_real_node and node.left.balance_factor > 0
+                node.rotate_right()
                 h = 1
-            else:
-                node.lr_rotate()
+            else: # LR imbalance
+                assert node.balance_factor > 1 and node.left.is_real_node and node.left.balance_factor < 0 and node.left.right.is_real_node
+                node.left.rotate_left()
+                node.rotate_right()
                 h = 2
         else:
-            if child.balance_factor > 0:
-                node.rl_rotate()
+            if child.balance_factor > 0: # RL imbalance
+                assert node.balance_factor < -1 and node.right.is_real_node and node.right.balance_factor > 0 and node.right.left.is_real_node
+                node.right.rotate_right()
+                node.rotate_left()
                 h = 2
-            else:
-                node.rr_rotate()
+            else: # RR imbalance
+                assert node.balance_factor < -1 and node.right.is_real_node and node.right.balance_factor < 0
+                node.rotate_left()
                 h = 1
         
         if self.root is node:
@@ -416,7 +397,8 @@ class AVLTree(object):
         node = self.root
         while _is_real(node):
             node = node.right
-        return node
+        assert node is self._max
+        return self._max
 
     """returns the number of items in dictionary 
 
