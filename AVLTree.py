@@ -1,15 +1,13 @@
-# id1: 213856032
-# name1: Nara Zangariya
-# username1: naraz
-# id2: 213513443
-# name2: Ghassan Jadoun
-# username2: ghassanj
+#id1: 213856032
+#name1: Nara Zangariya
+#username1: naraz
+#id2: 213513443
+#name2: Ghassan Jadoun
+#username2: ghassanj
 
 from typing import Self, Tuple
 
 """A class represnting a node in an AVL tree"""
-
-
 class AVLNode(object):
     """Constructor, you are allowed to add more fields.
 
@@ -18,7 +16,6 @@ class AVLNode(object):
     @type value: string
     @param value: data of your node
     """
-
     def __init__(self, key: int, value: str, leftNode: Self = None, rightNode: Self = None):
         if key is None:
             self.key = None
@@ -91,7 +88,7 @@ class AVLNode(object):
 
     def _set_parent(self, val: (Self | None)):
         if val is not None and not val.is_real_node:
-            raise ValueError("Node parent cannot be a virtual node.")
+            raise ValueError('Node parent cannot be a virtual node.')
 
         self._parent = val
         AVLNode._update_parent_heights(self)
@@ -99,13 +96,12 @@ class AVLNode(object):
     @property
     def height(self):
         if self._height != self.compute_height():
-            raise ValueError("Node height value is incorrect.")
+            raise ValueError('Node height value is incorrect.')
         return self._height
 
     """
     @returns: (height of left node) - (height of right node).
     """
-
     @property
     def balance_factor(self):
         self._raise_if_virtual_node()
@@ -114,14 +110,13 @@ class AVLNode(object):
     """
     @returns: False if self is a virtual node, True otherwise.
     """
-
     @property
     def is_real_node(self):
         return self.key is not None
 
     def _raise_if_virtual_node(self):
         if not self.is_real_node:
-            raise RuntimeError("Invalid operation on virtual node.")
+            raise RuntimeError('Invalid operation on virtual node.')
 
     # TODO: remove before submitting
     def compute_height(self) -> int:
@@ -163,7 +158,7 @@ class AVLNode(object):
             raise ValueError()
 
     @staticmethod
-    def _update_parent_heights(node: Self):
+    def _update_parent_heights(node: 'AVLNode'):
         node = node.parent
         while node is not None:
             new_height = max(node.left.height, node.right.height) + 1
@@ -176,13 +171,10 @@ class AVLNode(object):
 """
 A class implementing an AVL tree.
 """
-
-
 class AVLTree(object):
     """
     Constructor, you are allowed to add more fields.
     """
-
     def __init__(self, root: (AVLNode | None) = None):
         self.root = root
 
@@ -196,7 +188,6 @@ class AVLTree(object):
     @returns: a tuple (x,e) where x is the node corresponding to key (or None if not found),
     and e is the number of edges on the path between the starting node and ending node+1.
     """
-
     def search(self, key: int) -> Tuple[AVLNode, int]:
         (x, e, found) = AVLTree._search_rec(None, self.root, 1, key)
         if not found:
@@ -206,7 +197,6 @@ class AVLTree(object):
     """
     @returns: a tuple (x, e, found) where x is the node if found, else last node checked
     """
-
     @staticmethod
     def _search_rec(parent: (AVLNode | None), node: AVLNode, e: int, key: int) -> Tuple[AVLNode, int, bool]:
         if not AVLTree._is_real_node(node):
@@ -228,7 +218,6 @@ class AVLTree(object):
     @returns: a tuple (x,e) where x is the node corresponding to key (or None if not found),
     and e is the number of edges on the path between the starting node and ending node+1.
     """
-
     def finger_search(self, key: int) -> Tuple[AVLNode, int]:
         return AVLTree._search_from_max(self.max_node(), key, 0)
 
@@ -260,7 +249,6 @@ class AVLTree(object):
     e is the number of edges on the path between the starting node and new node before rebalancing,
     and h is the number of PROMOTE cases during the AVL rebalancing
     """
-
     def insert(self, key: int, val: str) -> Tuple[AVLNode, int, int]:
         parent, e, found = AVLTree._search_rec(None, self.root, 1, key)
 
@@ -281,7 +269,7 @@ class AVLTree(object):
     # Balances from the parent node up
     def balance(self, node: AVLNode):
         if node.left.is_real_node or node.right.is_real_node:
-            raise ValueError("node must be leaf")
+            raise ValueError('Parameter "node" must be leaf')
 
         child = node
         node = node.parent
@@ -352,7 +340,6 @@ class AVLTree(object):
     e is the number of edges on the path between the starting node and new node before rebalancing,
     and h is the number of PROMOTE cases during the AVL rebalancing
     """
-
     def finger_insert(self, key: int, val: str) -> Tuple[AVLNode, int, int]:
         return None, -1, -1
 
@@ -361,7 +348,6 @@ class AVLTree(object):
     @type node: AVLNode
     @pre: node is a real pointer to a node in self
     """
-
     def delete(self, node: AVLNode):
         return
 
@@ -376,7 +362,6 @@ class AVLTree(object):
     @pre: all keys in self are smaller than key and all keys in tree2 are larger than key,
     or the opposite way
     """
-
     def join(self, tree2: Self, key: int, val: str):
         return
 
@@ -390,7 +375,6 @@ class AVLTree(object):
     dictionary smaller than node.key, and right is an AVLTree representing the keys in the 
     dictionary larger than node.key.
     """
-
     def split(self, node: AVLNode) -> Tuple[Self, Self]:
         return None, None
 
@@ -399,7 +383,6 @@ class AVLTree(object):
     @rtype: list
     @returns: a sorted list according to key of touples (key, value) representing the data structure
     """
-
     def avl_to_array(self) -> list:
         list = []
         AVLTree._avl_to_array_rec(self.root, list)
@@ -419,7 +402,6 @@ class AVLTree(object):
     @rtype: AVLNode
     @returns: the maximal node, None if the dictionary is empty
     """
-
     def max_node(self) -> AVLNode:
         node = self.root
         while AVLTree._is_real_node(node):
@@ -431,7 +413,6 @@ class AVLTree(object):
     @rtype: int
     @returns: the number of items in dictionary 
     """
-
     def size(self) -> int:
         return self._size(self.root)
 
@@ -447,7 +428,6 @@ class AVLTree(object):
     @rtype: AVLNode
     @returns: the root, None if the dictionary is empty
     """
-
     def get_root(self) -> AVLNode:
         return self.root
 
