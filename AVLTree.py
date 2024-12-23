@@ -199,7 +199,7 @@ class AVLTree(object):
     """
     @staticmethod
     def _search_rec(parent: (AVLNode | None), node: AVLNode, e: int, key: int) -> Tuple[AVLNode, int, bool]:
-        if not AVLTree._is_real_node(node):
+        if not is_real(node):
             return parent, e, False
 
         if node.key == key:
@@ -266,10 +266,10 @@ class AVLTree(object):
         self.balance(new_node)
         return new_node, e, h
 
-    # Balances from the parent node up
+    # Balances the first subtree up from the passed node
     def balance(self, node: AVLNode):
         if node.left.is_real_node or node.right.is_real_node:
-            raise ValueError('Parameter "node" must be leaf')
+            raise ValueError('Parameter "node" must be a leaf.')
 
         child = node
         node = node.parent
@@ -289,44 +289,6 @@ class AVLTree(object):
                 node.rl_rotate()
             else:
                 node.rr_rotate()
-
-    def rotate_right(self, n):
-        newleftforparent = n.getRight()
-        parent = n.getParent()
-        if (parent is not None):
-            n.setParent(parent.getParent())
-        if (n.getParent() != None):
-            if (n.getParent().getLeft() == parent):
-                n.getParent().setLeft(n)
-            if (n.getParent().getRight() == parent):
-                n.getParent().setRight(n)
-        n.setRight(parent)
-        parent.setParent(n)
-        parent.setLeft(newleftforparent)
-        newleftforparent.setParent(parent)
-        parent.setHeight(max(parent.getRight().getHeight(), parent.getLeft().getHeight()) + 1)
-        parent.setSize(parent.getRight().getSize() + parent.getLeft().getSize() + 1)
-        n.setSize(n.getRight().getSize() + n.getLeft().getSize() + 1)
-        n.setHeight(max(n.getRight().getHeight(), n.getLeft().getHeight()) + 1)
-
-    def rotate_left(self, n):
-        newrightforparent = n.getLeft()
-        parent = n.getParent()
-        if (parent is not None):
-            n.setParent(parent.getParent())
-        if (n.getParent() != None):
-            if (n.getParent().getLeft() == parent):
-                n.getParent().setLeft(n)
-            if (n.getParent().getRight() == parent):
-                n.getParent().setRight(n)
-        n.setLeft(parent)
-        parent.setParent(n)
-        parent.setRight(newrightforparent)
-        newrightforparent.setParent(parent)
-        parent.setHeight(max(parent.getRight().getHeight(), parent.getLeft().getHeight()) + 1)
-        parent.setSize(parent.getRight().getSize() + parent.getLeft().getSize() + 1)
-        n.setSize(n.getRight().getSize() + n.getLeft().getSize() + 1)
-        n.setHeight(max(n.getRight().getHeight(), n.getLeft().getHeight()) + 1)
 
     """inserts a new node into the dictionary with corresponding key and value, starting at the max
 
@@ -384,18 +346,18 @@ class AVLTree(object):
     @returns: a sorted list according to key of touples (key, value) representing the data structure
     """
     def avl_to_array(self) -> list:
-        list = []
-        AVLTree._avl_to_array_rec(self.root, list)
-        return list
+        def _avl_to_array(node: AVLNode, list: list):
+            if not is_real(node):
+                return
 
-    @staticmethod
-    def _avl_to_array_rec(node: AVLNode, list: list):
-        if not AVLTree._is_real_node(node):
-            return
+            _avl_to_array(node.left, list)
+            list.append(node.value)
+            _avl_to_array(node.right, list)
+        
+        lst = []
+        _avl_to_array(self.root, lst)
+        return lst
 
-        AVLTree._avl_to_array_rec(node.left, list)
-        list.append(node.value)
-        AVLTree._avl_to_array_rec(node.right, list)
 
     """returns the node with the maximal key in the dictionary
 
@@ -404,7 +366,7 @@ class AVLTree(object):
     """
     def max_node(self) -> AVLNode:
         node = self.root
-        while AVLTree._is_real_node(node):
+        while is_real(node):
             node = node.right
         return node
 
@@ -414,14 +376,13 @@ class AVLTree(object):
     @returns: the number of items in dictionary 
     """
     def size(self) -> int:
-        return self._size(self.root)
+        def _size(node):
+            if not is_real(node):
+                return 0
+            
+            return _size(node.left) + _size(node.right) + 1
 
-    def _size(self, node):
-        if not AVLTree._is_real_node(node):
-            return 0
-        left_size = self._size(node.left)
-        right_size = self._size(node.right)
-        return 1 + left_size + right_size
+        return _size(self.root)
 
     """returns the root of the tree representing the dictionary
 
@@ -431,6 +392,5 @@ class AVLTree(object):
     def get_root(self) -> AVLNode:
         return self.root
 
-    @staticmethod
-    def _is_real_node(node: (AVLNode | None)):
-        return node is not None and node.is_real_node
+def is_real(node: (AVLNode | None)):
+    return node is not None and node.is_real_node
