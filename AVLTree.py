@@ -188,7 +188,7 @@ class AVLTree(object):
     and e is the number of edges on the path between the starting node and ending node+1.
     """
     def search(self, key: int) -> Tuple[AVLNode, int]:
-        (x, e, found) = AVLTree._search_core(None, self.root, 1, key)
+        (x, e, found) = AVLTree._search_core(None, self.root, key, 1)
         if not found:
             x = None
         return x, e
@@ -197,17 +197,17 @@ class AVLTree(object):
     @returns: a tuple (x, e, found) where x is the node if found, else last node checked
     """
     @staticmethod
-    def _search_core(parent: (AVLNode | None), node: AVLNode, e: int, key: int) -> Tuple[AVLNode, int, bool]:
+    def _search_core(parent: (AVLNode | None), node: AVLNode, key: int, e: int) -> Tuple[AVLNode, int, bool]:
         if not _is_real(node):
             return parent, e, False
 
-        if node.key == key:
+        if key == node.key:
             return node, e, True
 
-        if node.key > key:
-            return AVLTree._search_core(node, node.left, e + 1, key)
+        if key < node.key:
+            return AVLTree._search_core(node, node.left, key, e + 1)
 
-        return AVLTree._search_core(node, node.right, e + 1, key)
+        return AVLTree._search_core(node, node.right, key, e + 1)
 
     """searches for a node in the dictionary corresponding to the key, starting at the max
         
@@ -218,23 +218,23 @@ class AVLTree(object):
     and e is the number of edges on the path between the starting node and ending node+1.
     """
     def finger_search(self, key: int) -> Tuple[AVLNode, int]:
-        return AVLTree._finger_search_core(self.max_node(), key, 0)
+        (x, e, found) = AVLTree._finger_search_core(self.max_node().parent, self.max_node(), key, 1)
+        if not found:
+            x = None
+        return x, e
 
     @staticmethod
-    def _finger_search_core(self, node, key, depth):
-        if node is None:
-            return None, depth
+    def _finger_search_core(parent: (AVLNode | None), node: AVLNode, key: int, e: int) -> Tuple[AVLNode, int, bool]:
+        if not _is_real(node):
+            return parent, e, False
 
         if key == node.key:
-            return node, depth
-        if node.parent is not None:
-            if node.key > key > node.parent.key:
-                return self._search_from_max(node.left, key, depth + 1)
-            if node.key < key < node.parent.key:
-                return self._search_from_max(node.right, key, depth + 1)
-        if node.parent is None:
-            self._search_from_max(node.left, key, depth + 1)
-        return self._search_from_max(node.parent, key, depth + 1)
+            return node, e, True
+        
+        if node.parent is None or key > node.parent.key:
+            return AVLTree._search_core(node, node.left, key, e + 1)
+        
+        return AVLTree._finger_search_core(node.parent.parent, node.parent, key, e + 1)
 
     """inserts a new node into the dictionary with corresponding key and value (starting at the root)
 
@@ -249,7 +249,7 @@ class AVLTree(object):
     and h is the number of PROMOTE cases during the AVL rebalancing
     """
     def insert(self, key: int, val: str) -> Tuple[AVLNode, int, int]:
-        parent, e, found = AVLTree._search_core(None, self.root, 1, key)
+        parent, e, found = AVLTree._search_core(None, self.root, key, 1)
 
         if found:
             parent.value = val
