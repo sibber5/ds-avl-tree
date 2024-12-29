@@ -16,7 +16,7 @@ class AVLNode(object):
     @type value: string
     @param value: data of your node
     """
-    def __init__(self, key: int, value: str, leftNode: Self = None, rightNode: Self = None):
+    def __init__(self, key: int, value: str):
         if key is None:
             self.key = None
             self._parent = None
@@ -24,13 +24,12 @@ class AVLNode(object):
         else:
             self.key = key
             self.value = value
-            self._left = None
-            self._right = None
+            self._left = AVLNode.virtual()
+            self._left._parent = self
+            self._right = AVLNode.virtual()
+            self._right._parent = self
             self._parent = None
             self._height = 0
-
-            self.left = leftNode
-            self.right = rightNode
 
     @classmethod
     def virtual(cls):
@@ -45,20 +44,16 @@ class AVLNode(object):
     def left(self, val: (Self | None)):
         self._raise_if_virtual_node()
         if val is None:
-            # when constructing
-            if self._left is None:
-                self._left = AVLNode.virtual()
-                return
-
             if not self._left.is_real_node:
                 return
 
             val = AVLNode.virtual()
 
-        self._left._set_parent(None)
+        self._left._parent = None
         self._left = val
         _set_child_of_parent(val, None)
-        val._set_parent(self)
+        val._parent = self
+        self._update_heights()
 
     @property
     def right(self) -> Self:
@@ -69,31 +64,20 @@ class AVLNode(object):
     def right(self, val: (Self | None)):
         self._raise_if_virtual_node()
         if val is None:
-            # when constructing
-            if self._right is None:
-                self._right = AVLNode.virtual()
-                return
-
             if not self._right.is_real_node:
                 return
 
             val = AVLNode.virtual()
 
-        self._right._set_parent(None)
+        self._right._parent = None
         self._right = val
         _set_child_of_parent(val, None)
-        val._set_parent(self)
+        val._parent = self
+        self._update_heights()
 
     @property
     def parent(self):
         return self._parent
-
-    def _set_parent(self, val: (Self | None)):
-        if val is not None and not val.is_real_node:
-            raise ValueError('Node parent cannot be a virtual node.')
-
-        self._parent = val
-        _update_parent_heights(self)
 
     @property
     def height(self):
@@ -118,6 +102,14 @@ class AVLNode(object):
     def _raise_if_virtual_node(self):
         if not self.is_real_node:
             raise RuntimeError('Invalid operation on virtual node.')
+
+    def _update_heights(self):
+        while self is not None:
+            new_height = max(self.left.height, self.right.height) + 1
+            if self._height == new_height:
+                return
+            self._height = new_height
+            self = self.parent
 
     # TODO: remove before submitting
     def compute_height(self) -> int:
@@ -153,15 +145,6 @@ def _set_child_of_parent(child: AVLNode, node: (AVLNode | None)):
         parent.left = node
     else:
         parent.right = node
-
-def _update_parent_heights(node: AVLNode):
-    node = node.parent
-    while node is not None:
-        new_height = max(node.left.height, node.right.height) + 1
-        if node._height == new_height:
-            break
-        node._height = new_height
-        node = node.parent
 
 
 """
