@@ -143,7 +143,7 @@ class AVLNode(object):
         right.left = self
 
 """Sets the child to refer to a different node, i.e. (parent = `child.parent`) if parent.x (where x is 'left' or 'right') is `child`, parent.x will be set to `node`"""
-def _set_child_of_parent(child: 'AVLNode', node: 'AVLNode | None'):
+def _set_child_of_parent(child: AVLNode, node: (AVLNode | None)):
     parent = child.parent
     
     if parent is None:
@@ -154,7 +154,7 @@ def _set_child_of_parent(child: 'AVLNode', node: 'AVLNode | None'):
     else:
         parent.right = node
 
-def _update_parent_heights(node: 'AVLNode'):
+def _update_parent_heights(node: AVLNode):
     node = node.parent
     while node is not None:
         new_height = max(node.left.height, node.right.height) + 1
@@ -251,7 +251,9 @@ class AVLTree(object):
     """
     def insert(self, key: int, val: str) -> Tuple[AVLNode, int, int]:
         parent, e, found = AVLTree._search_core(self.root, key, 1)
+        return self._insert_core(key, val, parent, e, found)
 
+    def _insert_core(self, key: int, val: str, parent: (AVLNode | None), e: int, found: bool) -> Tuple[AVLNode, int, int]:
         if found:
             parent.value = val
             return parent, e, 0
@@ -265,8 +267,10 @@ class AVLTree(object):
             return new_node, e, 0
 
         if key < parent.key:
+            assert not _is_real(parent.left)
             parent.left = new_node
         else:
+            assert not _is_real(parent.right)
             parent.right = new_node
         
         h = self.rebalance(new_node)
@@ -331,7 +335,8 @@ class AVLTree(object):
     and h is the number of PROMOTE cases during the AVL rebalancing
     """
     def finger_insert(self, key: int, val: str) -> Tuple[AVLNode, int, int]:
-        return None, -1, -1
+        parent, e, found = AVLTree._finger_search_core(self.max_node(), key, 1)
+        return self._insert_core(key, val, parent, e, found)
 
     """deletes node from the dictionary
 
