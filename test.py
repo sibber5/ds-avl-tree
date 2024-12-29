@@ -3,9 +3,9 @@ from PrettyPrint import PrettyPrintTree
 
 def get_children(node: AVLNode):
     lst = []
-    if node.left.is_real_node:
+    if node.left.is_real_node():
         lst.append(node.left)
-    if node.right.is_real_node:
+    if node.right.is_real_node():
         lst.append(node.right)
     return lst
 pt = PrettyPrintTree(get_children, lambda x: x.key)
@@ -16,24 +16,28 @@ pt = PrettyPrintTree(get_children, lambda x: x.key)
 # root.left.left = AVLNode(20, '20')
 # root.right.left = AVLNode(44, '44')
 
-tree = AVLTree(AVLNode(50, ''))
-tree.insert(25, '')
-tree.insert(75, '')
-tree.insert(15, '')
-tree.insert(40, '')
-tree.insert(60, '')
-tree.insert(80, '')
-tree.insert(35, '')
-tree.insert(55, '')
-tree.insert(65, '')
-tree.insert(90, '')
-tree.insert(62, '')
+# tree = AVLTree(AVLNode(50, ''))
+# tree.insert(25, '')
+# tree.insert(75, '')
+# tree.insert(15, '')
+# tree.insert(40, '')
+# tree.insert(60, '')
+# tree.insert(80, '')
+# tree.insert(35, '')
+# tree.insert(55, '')
+# tree.insert(65, '')
+# tree.insert(90, '')
+# tree.insert(62, '')
+tree = AVLTree()
+tree.insert(4059, '')
+tree.insert(6167, '')
+tree.insert(7160, '')
 
 pt(tree.root)
 
-tree.delete(tree.root.left.left)
+# tree.delete(tree.root.left.left)
 # tree.delete_node(tree.root, tree.root.left.left.key)
 # delete_node(tree, 15)
 
 print()
-pt(tree.root)
+# pt(tree.root)
