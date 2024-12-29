@@ -10,20 +10,6 @@ def get_children(node: AVLNode):
     return lst
 pt = PrettyPrintTree(get_children, lambda x: x.key)
 
-def get_nodes_with_no_parent(root):
-    def rec(node: AVLNode, list: list):
-        if not _is_real(node):
-            return
-
-        rec(node.left, list)
-        if node.parent is None:
-            list.append(node)
-        rec(node.right, list)
-    
-    lst = []
-    rec(root, lst)
-    return lst
-
 # root = AVLNode(40, '40')
 # root.right = AVLNode(45, '45')
 # root.left = AVLNode(30, '30')
@@ -31,15 +17,23 @@ def get_nodes_with_no_parent(root):
 # root.right.left = AVLNode(44, '44')
 
 tree = AVLTree(AVLNode(50, ''))
+tree.insert(25, '')
+tree.insert(75, '')
+tree.insert(15, '')
 tree.insert(40, '')
-tree.insert(45, '')
-tree.insert(30, '')
-tree.insert(20, '')
 tree.insert(60, '')
-tree.insert(55, '')
-tree.insert(70, '')
-tree.insert(65, '')
 tree.insert(80, '')
+tree.insert(35, '')
+tree.insert(55, '')
+tree.insert(65, '')
 tree.insert(90, '')
+tree.insert(62, '')
 
+pt(tree.root)
+
+tree.delete(tree.root.left.left)
+# tree.delete_node(tree.root, tree.root.left.left.key)
+# delete_node(tree, 15)
+
+print()
 pt(tree.root)

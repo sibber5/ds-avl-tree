@@ -256,32 +256,24 @@ class AVLTree(object):
             assert not _is_real(parent.right)
             parent.right = new_node
         
-        h = self.rebalance(new_node)
+        node = new_node.parent
+        while node is not None:
+            if abs(node.balance_factor) > 1:
+                break
+            node = node.parent
+        h = self.rebalance(node)
         
         if new_node.key > self._max.key:
             self._max = new_node
 
         return new_node, e, h
 
-    # Balances the first subtree up from the passed node
     def rebalance(self, node: AVLNode) -> int:
-        if node.left.is_real_node or node.right.is_real_node:
-            raise ValueError('Parameter "node" must be a leaf.')
+        assert _is_real(node) and abs(node.balance_factor) > 1
 
-        child = node
-        node = node.parent
-        while node is not None:
-            if abs(node.balance_factor) > 1:
-                break
-            child = node
-            node = node.parent
-
-        if node is None:
-            return
-
-        h = -1
+        h = 0
         if node.balance_factor > 0:
-            if child.balance_factor > 0: # LL imbalance
+            if node.left.balance_factor > 0: # LL imbalance
                 assert node.balance_factor > 1 and node.left.is_real_node and node.left.balance_factor > 0
                 node.rotate_right()
                 h = 1
@@ -291,7 +283,7 @@ class AVLTree(object):
                 node.rotate_right()
                 h = 2
         else:
-            if child.balance_factor > 0: # RL imbalance
+            if node.right.balance_factor > 0: # RL imbalance
                 assert node.balance_factor < -1 and node.right.is_real_node and node.right.balance_factor > 0 and node.right.left.is_real_node
                 node.right.rotate_right()
                 node.rotate_left()
@@ -303,6 +295,7 @@ class AVLTree(object):
         
         if self.root is node:
             self.root = node.parent
+            assert self.root.parent is None
         return h
 
     """inserts a new node into the dictionary with corresponding key and value, starting at the max
@@ -327,7 +320,30 @@ class AVLTree(object):
     @pre: node is a real pointer to a node in self
     """
     def delete(self, node: AVLNode):
-        return
+        if node.left.is_real_node and node.right.is_real_node:
+            max_left = _get_max(node.left)
+            _swap_nodes(node, max_left)
+            if self.root is node:
+                self.root = max_left
+            self.delete(node)
+            return
+        
+        temp = node.left if node.left.is_real_node else node.right
+        if not temp.is_real_node: # if node is leaf
+            temp = node.parent
+            if self.root is node:
+                self.root = None
+            _set_child_of_parent(node, None)
+        else: # if node has 1 child
+            if self.root is node:
+                self.root = temp
+                _set_child_of_parent(temp, None)
+            else:
+                _set_child_of_parent(node, temp)
+
+        while temp is not None:
+            self.rebalance(temp)
+            temp = temp.parent
 
     """joins self with item and another AVLTree
 
@@ -388,11 +404,8 @@ class AVLTree(object):
     @rtype: AVLNode
     @returns: the maximal node, None if the dictionary is empty
     """
-    def max_node(self) -> AVLNode:
-        node = self.root
-        while _is_real(node):
-            node = node.right
-        assert node is self._max
+    def max_node(self) -> (AVLNode | None):
+        assert _get_max(self.root) is self._max
         return self._max
 
     """returns the number of items in dictionary 
@@ -419,3 +432,79 @@ class AVLTree(object):
 
 def _is_real(node: (AVLNode | None)):
     return node is not None and node.is_real_node
+
+def _get_max(node: AVLNode) -> (AVLNode | None):
+    if _is_real(node):
+        while _is_real(node.right):
+            node = node.right
+        return node
+    else:
+        return None
+
+def _swap_nodes(old: AVLNode, new: AVLNode):
+    def swap_parent_child(parent: AVLNode, child: AVLNode):
+        child_left = child._left
+        child_right = child._right
+        child_height = child._height
+
+        child._parent = parent._parent
+        child._height = parent._height
+        parent._height = child_height
+        parent._parent = child
+
+        if parent._left is child:
+            child._right = parent._right
+            parent._right._parent = child
+            child._left = parent
+        else:
+            child._right = parent
+            child._left = parent._left
+            parent._left._parent = child
+        
+        parent._left = child_left
+        child_left._parent = parent
+        parent._right = child_right
+        child_right._parent = parent
+
+        if child._parent._left is parent:
+            child._parent._left = child
+        else:
+            child._parent._right = child
+
+    if new._parent is old:
+        swap_parent_child(old, new)
+        return
+    elif old._parent is new:
+        swap_parent_child(new, old)
+        return
+
+    new_left = new._left
+    new_right = new._right
+    new_parent = new._parent
+    new_height = new._height
+
+    new._left = old._left
+    new._left._parent = new
+    new._right = old._right
+    new._right._parent = new
+    new._parent = old._parent
+    new._height = old._height
+
+    if old._parent is not None:
+        if old._parent._left is old:
+            old._parent._left = new
+        else:
+            old._parent._right = new
+
+    old._left = new_left
+    old._left._parent = old
+    old._right = new_right
+    old._right._parent = old
+    old._parent = new_parent
+    old._height = new_height
+
+    if new_parent is not None:
+        if new_parent._left is new:
+            new_parent._left = old
+        else:
+            new_parent._right = old
