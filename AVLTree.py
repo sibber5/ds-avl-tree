@@ -162,7 +162,8 @@ class AVLTree(object):
         self._max = None
 
         if self.root is not None:
-            assert not self.root.left.is_real_node() and not self.root.right.is_real_node() and self.root.parent is None
+            if self.root.left.is_real_node() or self.root.right.is_real_node() or self.root.parent is not None:
+                raise ValueError("root must not have child nodes nor parent.")
             self._max = self.root
 
     """searches for a node in the dictionary corresponding to the key (starting at the root)
@@ -313,6 +314,11 @@ class AVLTree(object):
 
         return h
 
+    def rebalance_up_from(self, node: AVLNode):
+        while _is_real(node):
+            self.rebalance(node)
+            node = node.parent
+
     """inserts a new node into the dictionary with corresponding key and value, starting at the max
 
     @type key: int
@@ -356,9 +362,7 @@ class AVLTree(object):
             else:
                 _set_child_of_parent(node, temp)
 
-        while temp is not None:
-            self.rebalance(temp)
-            temp = temp.parent
+        self.rebalance_up_from(temp)
 
     """joins self with item and another AVLTree
 
@@ -372,16 +376,40 @@ class AVLTree(object):
     or the opposite way
     """
     def join(self, tree2: Self, key: int, val: str):
-        def _insert_nodes(node: AVLNode, tree: Self):
-            if not _is_real(node):
-                return
+        if not _is_real(tree2.root):
+            self.insert(key, val)
+            return
 
-            _insert_nodes(node.left, tree)
-            tree.insert(node)
-            _insert_nodes(node.right, tree)
+        if not _is_real(self.root):
+            self.root = tree2.root
+            self.insert(key, val)
+            return
+
+        x = AVLNode(key, val)
+
+        smaller = self
+        larger = tree2
+        if smaller.root.height > larger.root.height:
+            smaller, larger = larger, smaller
+
+        b = larger.root
+        while b.height > smaller.root.height and _is_real(b.left):
+            b = b.left
         
-        self.insert(AVLNode(key, val))
-        _insert_nodes(tree2.get_root(), self)
+        c = b.parent
+        
+        x.left = smaller.root
+        x.right = b
+        if _is_real(c):
+            c.left = x
+            self.root = larger.root
+        else:
+            assert x.parent is None and larger.root is b
+            self.root = x
+
+        self.rebalance_up_from(x)
+
+        self._max = _get_max(self.root)
 
     """splits the dictionary at a given node
 
@@ -420,7 +448,7 @@ class AVLTree(object):
     @returns: the maximal node, None if the dictionary is empty
     """
     def max_node(self) -> (AVLNode | None):
-        assert _get_max(self.root) is self._max
+        assert _get_max(self.root) is self._max # TODO: remove before submitting
         return self._max
 
     """returns the number of items in dictionary 
