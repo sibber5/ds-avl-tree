@@ -336,12 +336,13 @@ class AVLTree(object):
         assert tree2_root.parent is None
 
         if not _is_real(tree2_root):
-            self.insert(median.key, median.val)
+            self.insert(median.key, median.value)
             return
 
         if not _is_real(self.root):
             self.root = tree2_root
-            self.insert(median.key, median.val)
+            self._max = _get_max(self.root)
+            self.insert(median.key, median.value)
             return
 
         x = median if median is not None else AVLNode(key, val)
@@ -398,29 +399,27 @@ class AVLTree(object):
     """
     def split(self, node: AVLNode) -> Tuple[Self, Self]:
         smaller = AVLTree()
-        if node.left.is_real_node():
-            left = node.left
-            node.left = None
-            smaller.root = left
         larger = AVLTree()
-        if node.right.is_real_node():
-            right = node.right
-            node.right = None
-            larger.root = right
 
-        up_left = node is node.parent.right
-        node = node.parent
+        up_left = None
         while _is_real(node):
             left = node.left
             right = node.right
             parent = node.parent
-            going_up_left = node is parent.right
+            going_up_left = node is parent.right if _is_real(parent) else None
 
             _set_child_of_parent(node, None)
             node.left = None
             node.right = None
 
-            if up_left:
+            if up_left is None:
+                if left.is_real_node():
+                    smaller.root = left
+                    smaller._max = _get_max(left)
+                if right.is_real_node():
+                    larger.root = right
+                    larger._max = _get_max(right)
+            elif up_left:
                 smaller._join_core(left, node)
             else:
                 larger._join_core(right, node)
