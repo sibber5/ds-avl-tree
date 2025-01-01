@@ -54,6 +54,7 @@ class AVLNode(object):
         val._parent = self
         if AVLNode._auto_update_heights:
             self._update_heights()
+        assert (not self._left.is_real_node()) or self._left.key < self.key
 
     @property
     def right(self) -> Self:
@@ -72,6 +73,7 @@ class AVLNode(object):
         val._parent = self
         if AVLNode._auto_update_heights:
             self._update_heights()
+        assert (not self._right.is_real_node()) or self._right.key > self.key
 
     @property
     def parent(self):
@@ -104,10 +106,10 @@ class AVLNode(object):
         h = 0
         while self is not None:
             new_height = max(self.left.height, self.right.height) + 1
-            if new_height == self._height:
-                break
-            elif new_height > self._height:
+            if new_height > self._height:
                 h += 1
+            elif new_height == self._height and AVLNode._auto_update_heights:
+                break
             self._height = new_height
             self = self.parent
         return h
@@ -216,6 +218,10 @@ class AVLTree(object):
             assert node is None
             return None, e, False
 
+        if key > node.key: # iff key > max_node.key
+            assert e == 1
+            return node, e, False
+
         if key == node.key:
             return node, e, True
         
@@ -317,6 +323,8 @@ class AVLTree(object):
 
         self._rebalance_up_from(temp)
 
+        self._max = _get_max(self.root)
+
     """joins self with item and another AVLTree
 
     @type tree2: AVLTree 
@@ -333,7 +341,7 @@ class AVLTree(object):
     
     def _join_core(self, tree2_root: AVLNode, median: AVLNode):
         assert median is None or (median.is_real_node() and not median.left.is_real_node() and not median.right.is_real_node() and median.parent is None)
-        assert tree2_root.parent is None
+        assert tree2_root is None or tree2_root.parent is None
 
         if not _is_real(tree2_root):
             self.insert(median.key, median.value)
@@ -427,6 +435,8 @@ class AVLTree(object):
             up_left = going_up_left
             node = parent
 
+        assert smaller._max is _get_max(smaller.root)
+        assert larger._max is _get_max(larger.root)
         return smaller, larger
 
     """returns an array representing dictionary 
@@ -486,20 +496,20 @@ class AVLTree(object):
         AVLNode._auto_update_heights = False
 
         if node.balance_factor > 0:
-            if node.left.balance_factor > 0: # LL imbalance
-                assert node.balance_factor > 1 and node.left.is_real_node() and node.left.balance_factor > 0
+            if node.left.balance_factor >= 0: # LL imbalance
+                assert node.balance_factor > 1 and node.left.is_real_node() and node.left.balance_factor >= 0
                 node.rotate_right()
             else: # LR imbalance
                 assert node.balance_factor > 1 and node.left.is_real_node() and node.left.balance_factor < 0 and node.left.right.is_real_node()
                 node.left.rotate_left()
                 node.rotate_right()
         else:
-            if node.right.balance_factor > 0: # RL imbalance
+            if node.right.balance_factor <= 0: # RR imbalance
+                assert node.balance_factor < -1 and node.right.is_real_node() and node.right.balance_factor <= 0
+                node.rotate_left()
+            else: # RL imbalance
                 assert node.balance_factor < -1 and node.right.is_real_node() and node.right.balance_factor > 0 and node.right.left.is_real_node()
                 node.right.rotate_right()
-                node.rotate_left()
-            else: # RR imbalance
-                assert node.balance_factor < -1 and node.right.is_real_node() and node.right.balance_factor < 0
                 node.rotate_left()
         
         subtree_root = node.parent
@@ -562,6 +572,8 @@ def _swap_nodes(old: AVLNode, new: AVLNode):
         parent._right = child_right
         child_right._parent = parent
 
+        if child._parent is None:
+            return
         if child._parent._left is parent:
             child._parent._left = child
         else:

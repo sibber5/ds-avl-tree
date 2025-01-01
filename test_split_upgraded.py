@@ -28,12 +28,12 @@ def in_order_rec(node, keys):
     if node.key is not None:
         in_order_rec(node.left, keys)
         h=max(node.left.height, node.right.height) + 1
-        assert node.height==h, "height of node:"+node.key+"is wrong. it's "+node.height+"instead of "+h
-        assert abs(node.left.height-node.right.height) <2, "balance factor of node:"+node.key+"is too big - it is not an AVL tree!"
+        assert node.height==h, f"height of node: {node.key} is wrong. it's {node.height} instead of {h}"
+        assert abs(node.left.height-node.right.height) <2, f"balance factor of node: {node.key} is too big - it is not an AVL tree!"
         if node.left.is_real_node():
-            assert node.left.parent is node, "problem with left child of node:"+node.key
+            assert node.left.parent is node, f"problem with left child of node: {node.key}"
         if node.right.is_real_node():
-            assert node.right.parent is node, "problem with right child of node:"+node.key
+            assert node.right.parent is node, f"problem with right child of node: {node.key}"
         keys.append(node.key)
         in_order_rec(node.right, keys)
 
