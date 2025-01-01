@@ -329,36 +329,58 @@ class AVLTree(object):
     or the opposite way
     """
     def join(self, tree2: Self, key: int, val: str):
-        if not _is_real(tree2.root):
-            self.insert(key, val)
+        self._join_core(tree2.root, AVLNode(key, val))
+    
+    def _join_core(self, tree2_root: AVLNode, median: AVLNode):
+        assert median is None or (median.is_real_node() and not median.left.is_real_node() and not median.right.is_real_node() and median.parent is None)
+        assert tree2_root.parent is None
+
+        if not _is_real(tree2_root):
+            self.insert(median.key, median.val)
             return
 
         if not _is_real(self.root):
-            self.root = tree2.root
-            self.insert(key, val)
+            self.root = tree2_root
+            self.insert(median.key, median.val)
             return
 
-        x = AVLNode(key, val)
+        x = median if median is not None else AVLNode(key, val)
 
-        smaller = self
-        larger = tree2
-        if smaller.root.height > larger.root.height:
+        smaller = self.root
+        larger = tree2_root
+        if smaller.key > larger.key:
             smaller, larger = larger, smaller
 
-        b = larger.root
-        while b.height > smaller.root.height and _is_real(b.left):
-            b = b.left
-        
-        c = b.parent
-        
-        x.left = smaller.root
-        x.right = b
-        if _is_real(c):
-            c.left = x
-            self.root = larger.root
+        if smaller.height <= larger.height:
+            b = larger
+            while b.height > smaller.height and _is_real(b.left):
+                b = b.left
+            
+            c = b.parent
+            
+            x.left = smaller
+            x.right = b
+            if _is_real(c):
+                c.left = x
+                self.root = larger
+            else:
+                assert x.parent is None and larger is b
+                self.root = x
         else:
-            assert x.parent is None and larger.root is b
-            self.root = x
+            b = smaller
+            while b.height > larger.height and _is_real(b.right):
+                b = b.right
+            
+            c = b.parent
+            
+            x.left = b
+            x.right = larger
+            if _is_real(c):
+                c.right = x
+                self.root = smaller
+            else:
+                assert x.parent is None and smaller is b
+                self.root = x
 
         self._rebalance_up_from(x)
 
@@ -375,7 +397,38 @@ class AVLTree(object):
     dictionary larger than node.key.
     """
     def split(self, node: AVLNode) -> Tuple[Self, Self]:
-        return None, None
+        smaller = AVLTree()
+        if node.left.is_real_node():
+            left = node.left
+            node.left = None
+            smaller.root = left
+        larger = AVLTree()
+        if node.right.is_real_node():
+            right = node.right
+            node.right = None
+            larger.root = right
+
+        up_left = node is node.parent.right
+        node = node.parent
+        while _is_real(node):
+            left = node.left
+            right = node.right
+            parent = node.parent
+            going_up_left = node is parent.right
+
+            _set_child_of_parent(node, None)
+            node.left = None
+            node.right = None
+
+            if up_left:
+                smaller._join_core(left, node)
+            else:
+                larger._join_core(right, node)
+            
+            up_left = going_up_left
+            node = parent
+
+        return smaller, larger
 
     """returns an array representing dictionary 
 
