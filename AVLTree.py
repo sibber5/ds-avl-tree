@@ -265,59 +265,12 @@ class AVLTree(object):
             if abs(node.balance_factor) > 1:
                 break
             node = node.parent
-        h = self.rebalance(node) if node is not None else 0
+        h = self._rebalance(node) if node is not None else 0
         
         if new_node.key > self._max.key:
             self._max = new_node
 
         return new_node, e, h
-
-    def rebalance(self, node: AVLNode) -> int:
-        assert _is_real(node)
-        if abs(node.balance_factor) < 2:
-            return 0
-
-        AVLNode._auto_update_heights = False
-
-        if node.balance_factor > 0:
-            if node.left.balance_factor > 0: # LL imbalance
-                assert node.balance_factor > 1 and node.left.is_real_node() and node.left.balance_factor > 0
-                node.rotate_right()
-            else: # LR imbalance
-                assert node.balance_factor > 1 and node.left.is_real_node() and node.left.balance_factor < 0 and node.left.right.is_real_node()
-                node.left.rotate_left()
-                node.rotate_right()
-        else:
-            if node.right.balance_factor > 0: # RL imbalance
-                assert node.balance_factor < -1 and node.right.is_real_node() and node.right.balance_factor > 0 and node.right.left.is_real_node()
-                node.right.rotate_right()
-                node.rotate_left()
-            else: # RR imbalance
-                assert node.balance_factor < -1 and node.right.is_real_node() and node.right.balance_factor < 0
-                node.rotate_left()
-        
-        subtree_root = node.parent
-
-        if self.root is node:
-            self.root = subtree_root
-            assert self.root.parent is None
-
-        h = 0
-        if subtree_root.right.is_real_node():
-            new_height = max(subtree_root.right.left.height, subtree_root.right.right.height) + 1
-            if new_height > subtree_root.right._height:
-                h += 1
-            subtree_root.right._height = new_height
-        h += subtree_root.left._update_heights() if subtree_root.left.is_real_node() else subtree_root._update_heights()
-
-        AVLNode._auto_update_heights = True
-
-        return h
-
-    def rebalance_up_from(self, node: AVLNode):
-        while _is_real(node):
-            self.rebalance(node)
-            node = node.parent
 
     """inserts a new node into the dictionary with corresponding key and value, starting at the max
 
@@ -362,7 +315,7 @@ class AVLTree(object):
             else:
                 _set_child_of_parent(node, temp)
 
-        self.rebalance_up_from(temp)
+        self._rebalance_up_from(temp)
 
     """joins self with item and another AVLTree
 
@@ -407,7 +360,7 @@ class AVLTree(object):
             assert x.parent is None and larger.root is b
             self.root = x
 
-        self.rebalance_up_from(x)
+        self._rebalance_up_from(x)
 
         self._max = _get_max(self.root)
 
@@ -472,6 +425,54 @@ class AVLTree(object):
     """
     def get_root(self) -> AVLNode:
         return self.root
+
+    def _rebalance(self, node: AVLNode) -> int:
+        assert _is_real(node)
+        if abs(node.balance_factor) < 2:
+            return 0
+
+        AVLNode._auto_update_heights = False
+
+        if node.balance_factor > 0:
+            if node.left.balance_factor > 0: # LL imbalance
+                assert node.balance_factor > 1 and node.left.is_real_node() and node.left.balance_factor > 0
+                node.rotate_right()
+            else: # LR imbalance
+                assert node.balance_factor > 1 and node.left.is_real_node() and node.left.balance_factor < 0 and node.left.right.is_real_node()
+                node.left.rotate_left()
+                node.rotate_right()
+        else:
+            if node.right.balance_factor > 0: # RL imbalance
+                assert node.balance_factor < -1 and node.right.is_real_node() and node.right.balance_factor > 0 and node.right.left.is_real_node()
+                node.right.rotate_right()
+                node.rotate_left()
+            else: # RR imbalance
+                assert node.balance_factor < -1 and node.right.is_real_node() and node.right.balance_factor < 0
+                node.rotate_left()
+        
+        subtree_root = node.parent
+
+        if self.root is node:
+            self.root = subtree_root
+            assert self.root.parent is None
+
+        h = 0
+        if subtree_root.right.is_real_node():
+            new_height = max(subtree_root.right.left.height, subtree_root.right.right.height) + 1
+            if new_height > subtree_root.right._height:
+                h += 1
+            subtree_root.right._height = new_height
+        h += subtree_root.left._update_heights() if subtree_root.left.is_real_node() else subtree_root._update_heights()
+
+        AVLNode._auto_update_heights = True
+
+        return h
+
+    def _rebalance_up_from(self, node: AVLNode):
+        while _is_real(node):
+            self._rebalance(node)
+            node = node.parent
+
 
 def _is_real(node: (AVLNode | None)):
     return node is not None and node.is_real_node()
