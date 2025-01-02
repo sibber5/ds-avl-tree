@@ -53,7 +53,7 @@ class AVLNode(object):
         _set_child_of_parent(val, None)
         val._parent = self
         if AVLNode._auto_update_heights:
-            self._update_heights()
+            self._update_heights_up()
         assert (not self._left.is_real_node()) or self._left.key < self.key
 
     @property
@@ -72,7 +72,7 @@ class AVLNode(object):
         _set_child_of_parent(val, None)
         val._parent = self
         if AVLNode._auto_update_heights:
-            self._update_heights()
+            self._update_heights_up()
         assert (not self._right.is_real_node()) or self._right.key > self.key
 
     @property
@@ -81,7 +81,6 @@ class AVLNode(object):
 
     @property
     def height(self):
-        assert self._height == self.compute_height()
         return self._height
 
     """
@@ -102,7 +101,10 @@ class AVLNode(object):
         if not self.is_real_node():
             raise RuntimeError('Invalid operation on virtual node.')
 
-    def _update_heights(self):
+    def _update_height(self):
+        self._height = max(self.left.height, self.right.height) + 1
+
+    def _update_heights_up(self):
         h = 0
         while self is not None:
             new_height = max(self.left.height, self.right.height) + 1
@@ -114,13 +116,6 @@ class AVLNode(object):
             self = self.parent
         return h
 
-    # TODO: remove before submitting
-    def compute_height(self) -> int:
-        if not self.is_real_node():
-            return -1
-
-        return max(self.left.compute_height(), self.right.compute_height()) + 1
-
     def rotate_right(self):
         left = self.left
         right_of_left = left.right
@@ -128,6 +123,12 @@ class AVLNode(object):
         _set_child_of_parent(self, left)
         self.left = right_of_left
         left.right = self
+
+        # when inserting _auto_update_heights would be False because we want to count the promote cases. but there are no promote
+        # cases when rotating, so we auto update the heights of the rotated nodes despite auto updating being off to make the code simpler.
+        if AVLNode._auto_update_heights == False:
+            self._update_height()
+            self.parent._update_height()
     
     def rotate_left(self):
         right = self.right
@@ -136,6 +137,10 @@ class AVLNode(object):
         _set_child_of_parent(self, right)
         self.right = left_of_right
         right.left = self
+
+        if AVLNode._auto_update_heights == False:
+            self._update_height()
+            self.parent._update_height()
 
 """Sets the child to refer to a different node, i.e. (parent = `child.parent`) if parent.x (where x is 'left' or 'right') is `child`, parent.x will be set to `node`"""
 def _set_child_of_parent(child: AVLNode, node: (AVLNode | None)):
@@ -259,6 +264,9 @@ class AVLTree(object):
             self._max = new_node
             return new_node, e, 0
 
+        AVLNode._auto_update_heights = False
+        prev_bf = parent.balance_factor
+
         if key < parent.key:
             assert not _is_real(parent.left)
             parent.left = new_node
@@ -266,17 +274,44 @@ class AVLTree(object):
             assert not _is_real(parent.right)
             parent.right = new_node
         
-        node = new_node.parent
-        while node is not None:
-            if abs(node.balance_factor) > 1:
-                break
-            node = node.parent
-        h = self._rebalance(node) if node is not None else 0
-        
+        h = self._update_heights_and_rebalance(new_node, prev_bf)
+        AVLNode._auto_update_heights = True
+
         if new_node.key > self._max.key:
             self._max = new_node
 
         return new_node, e, h
+
+    def _update_heights_and_rebalance(self, node: (AVLNode | None), prev_bf: int):
+        assert AVLNode._auto_update_heights == False
+
+        h = 0
+        while node is not None:
+            # node._update_height()
+            assert node._height == max(node.left.height, node.right.height) + 1
+
+            if node.parent is None:
+                return h
+            
+            if prev_bf == 0: # case 1
+                prev_bf = node.parent.parent.balance_factor if node.parent.parent is not None else None
+                node.parent._height += 1
+                h += 1
+                node = node.parent
+                continue
+            
+            if abs(prev_bf) == 1:
+                if node.parent.balance_factor == 0:
+                    return h
+                
+                # case 2 + 3
+                assert abs(node.parent.balance_factor) == 2
+                self._rebalance(node.parent)
+                return h
+
+            raise ValueError(f'Invalid balance factor: {prev_bf}.')
+        return h
+        
 
     """inserts a new node into the dictionary with corresponding key and value, starting at the max
 
@@ -490,13 +525,9 @@ class AVLTree(object):
 
     def _rebalance(self, node: AVLNode) -> int:
         assert _is_real(node)
-        required_balance = 0
-        if abs(node.balance_factor) < 2:
-            return 0
-        else:
-            required_balance = 1
 
-        AVLNode._auto_update_heights = False
+        if abs(node.balance_factor) < 2:
+            return
 
         if node.balance_factor > 0:
             if node.left.balance_factor >= 0: # LL imbalance
@@ -521,20 +552,10 @@ class AVLTree(object):
             self.root = subtree_root
             assert self.root.parent is None
 
-        h = 0
-        if subtree_root.right.is_real_node():
-            new_height = max(subtree_root.right.left.height, subtree_root.right.right.height) + 1
-            if new_height > subtree_root.right._height:
-                h += 1
-            subtree_root.right._height = new_height
-        h += subtree_root.left._update_heights() if subtree_root.left.is_real_node() else subtree_root._update_heights()
-
-        AVLNode._auto_update_heights = True
-
-        return required_balance
+        return
 
     def _rebalance_up_from(self, node: AVLNode):
-        while _is_real(node):
+        while node is not None:
             self._rebalance(node)
             node = node.parent
 

@@ -1,16 +1,16 @@
 import random
 
 from AVLTree import *
-# from PrettyPrint import PrettyPrintTree
+from PrettyPrint import PrettyPrintTree
 
-# def get_children(node: AVLNode):
-#     lst = []
-#     if node.left.is_real_node():
-#         lst.append(node.left)
-#     if node.right.is_real_node():
-#         lst.append(node.right)
-#     return lst
-# pt = PrettyPrintTree(get_children, lambda x: x.key)
+def get_children(node: AVLNode):
+    lst = []
+    if node.left.is_real_node():
+        lst.append(node.left)
+    if node.right.is_real_node():
+        lst.append(node.right)
+    return lst
+pt = PrettyPrintTree(get_children, lambda x: x.key)
 
 # root = AVLNode(40, '40')
 # root.right = AVLNode(45, '45')
@@ -77,10 +77,18 @@ def get_reverse_count(arr):
     return reverses
 
 print("i, sorted, reversed, shuffled, swapped")
-get_count = get_reverse_count
+get_count = get_balances
 for i in range(1, 11):
     sorted_0, reversed_0, _, _ = get_arrays(i)
     sorted_count = get_count(sorted_0)
     reversed_count = get_count(reversed_0)
     shuffled_count, swapped_count = get_average(i, get_count)
     print(f"{i}, {sorted_count}, {reversed_count}, {shuffled_count}, {swapped_count}")
+
+# tree = AVLTree()
+# _, _, h = tree.insert(3, '')
+# print(h)
+# _, _, h = tree.insert(1, '')
+# print(h)
+# _, _, h = tree.insert(2, '')
+# print(h)
