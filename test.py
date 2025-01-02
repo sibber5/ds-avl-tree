@@ -51,13 +51,21 @@ def get_arrays(k):
             index_swap_arr[j], index_swap_arr[j + 1] = index_swap_arr[j + 1], index_swap_arr[j]
     return sorted_arr, reverse_arr, shuffled_arr, index_swap_arr
 
-def get_balances(arr):
+def get_promote_count(arr):
     tree = AVLTree()
-    balances = 0
+    count = 0
     for item in arr:
         _, _, h = tree.finger_insert(item, '')
-        balances += h
-    return balances
+        count += h
+    return count
+
+def get_paths_count(arr):
+    tree = AVLTree()
+    count = 0
+    for item in arr:
+        _, e, _ = tree.finger_insert(item, '')
+        count += e
+    return count
 
 def get_average(i, get_count):
     shuffled_count_0 = 0
@@ -77,7 +85,7 @@ def get_reverse_count(arr):
     return reverses
 
 print("i, sorted, reversed, shuffled, swapped")
-get_count = get_balances
+get_count = get_paths_count
 for i in range(1, 11):
     sorted_0, reversed_0, _, _ = get_arrays(i)
     sorted_count = get_count(sorted_0)
