@@ -490,8 +490,11 @@ class AVLTree(object):
 
     def _rebalance(self, node: AVLNode) -> int:
         assert _is_real(node)
+        required_balance = 0
         if abs(node.balance_factor) < 2:
             return 0
+        else:
+            required_balance = 1
 
         AVLNode._auto_update_heights = False
 
@@ -528,7 +531,7 @@ class AVLTree(object):
 
         AVLNode._auto_update_heights = True
 
-        return h
+        return required_balance
 
     def _rebalance_up_from(self, node: AVLNode):
         while _is_real(node):
