@@ -1,6 +1,6 @@
-#id1: 213856032
-#name1: Nara Zangariya
-#username1: naraz
+#id1: 214611055
+#name1: Majd Shhadi
+#username1: Majdishhadi
 #id2: 213513443
 #name2: Ghassan Jadoun
 #username2: ghassanj
@@ -192,8 +192,10 @@ class AVLTree(object):
     """
     @staticmethod
     def _search_core(node: AVLNode, key: int, e: int) -> Tuple[(AVLNode | None), int, bool]:
-        if not _is_real(node):
-            return node.parent if node is not None else None, e if node is None else e - 1, False # node is None iff self.root is None
+        if node is None: # iff self.root is None
+            return None, e, False
+        if not node.is_real_node():
+            return node.parent, e - 1, False
 
         if key == node.key:
             return node, e, True
@@ -371,11 +373,11 @@ class AVLTree(object):
     @pre: all keys in self are smaller than key and all keys in tree2 are larger than key,
     or the opposite way
     """
-    def join(self, tree2: Self, key: int, val: str):
-        self._join_core(tree2.root, AVLNode(key, val))
+    def join(self, tree2: (Self | None), key: int, val: str):
+        self._join_core(tree2.root if tree2 is not None else None, AVLNode(key, val))
     
-    def _join_core(self, tree2_root: AVLNode, median: AVLNode):
-        assert median is None or (median.is_real_node() and not median.left.is_real_node() and not median.right.is_real_node() and median.parent is None)
+    def _join_core(self, tree2_root: (AVLNode | None), median: AVLNode):
+        assert median is not None and (median.is_real_node() and not median.left.is_real_node() and not median.right.is_real_node() and median.parent is None)
         assert tree2_root is None or tree2_root.parent is None
 
         if not _is_real(tree2_root):
@@ -388,7 +390,7 @@ class AVLTree(object):
             self.insert(median.key, median.value)
             return
 
-        x = median if median is not None else AVLNode(key, val)
+        x = median
 
         smaller = self.root
         larger = tree2_root
