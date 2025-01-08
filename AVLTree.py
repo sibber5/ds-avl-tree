@@ -193,7 +193,7 @@ class AVLTree(object):
     @staticmethod
     def _search_core(node: AVLNode, key: int, e: int) -> Tuple[(AVLNode | None), int, bool]:
         if not _is_real(node):
-            return node.parent if node is not None else None, e, False # node is None iff self.root is None
+            return node.parent if node is not None else None, e if node is None else e - 1, False # node is None iff self.root is None
 
         if key == node.key:
             return node, e, True
@@ -262,7 +262,7 @@ class AVLTree(object):
             assert self.root is None
             self.root = new_node
             self._max = new_node
-            return new_node, e, 0
+            return new_node, e - 1, 0
 
         AVLNode._auto_update_heights = False
         prev_bf = parent.balance_factor

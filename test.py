@@ -18,14 +18,17 @@ pt = PrettyPrintTree(get_children, lambda x: x.key)
 # root.left.left = AVLNode(20, '20')
 # root.right.left = AVLNode(44, '44')
 
+# tree = AVLTree()
 # for i in [5, 27, 29, 37, 1, 50, 36, 66]:
-# for i in [20, 55, 60, 75, 35, 40, 15, 90, 80, 25, 62, 65]:
-#     tree.insert(i, '')
+# for i in [8, 4, 15, 3, 6, 11, 54]:
+    # tree.insert(i, '')
 # x, _ = tree.search(66)
 
 # print(tree.max_node())
 # print()
 # pt(tree.root)
+# print(tree.finger_search(11))
+# print(tree.finger_search(32))
 
 # tree.delete(tree.root.left.left)
 # tree.delete_node(tree.root, tree.root.left.left.key)
