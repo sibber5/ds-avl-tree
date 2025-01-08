@@ -9,7 +9,7 @@ from typing import Self, Tuple
 
 """A class represnting a node in an AVL tree"""
 class AVLNode(object):
-    _auto_update_heights = True
+    _auto_update_heights: bool = True
 
     """Constructor, you are allowed to add more fields.
 
@@ -22,7 +22,7 @@ class AVLNode(object):
         if key is None:
             self.key = None
             self._parent: AVLNode = None
-            self._height = -1
+            self.height = -1
         else:
             self.key = key
             self.value = value
@@ -31,7 +31,7 @@ class AVLNode(object):
             self._right = AVLNode.virtual()
             self._right._parent = self
             self._parent: AVLNode = None
-            self._height = 0
+            self.height = 0
 
     @classmethod
     def virtual(cls):
@@ -42,6 +42,12 @@ class AVLNode(object):
         self._raise_if_virtual_node()
         return self._left
 
+    """
+    Time complexity: 
+    If _auto_update_heights = True, O(log n) (where n is the number of nodes in the tree) because it will update the heights of all nodes above it up to the root, 
+    so at most height(tree) operations and for an avl tree height(tree) = O(log n). 
+    If _auto_update_heights = False, O(1)
+    """
     @left.setter
     def left(self, val: (Self | None)):
         self._raise_if_virtual_node()
@@ -60,7 +66,13 @@ class AVLNode(object):
     def right(self) -> Self:
         self._raise_if_virtual_node()
         return self._right
-
+    
+    """
+    Time complexity: 
+    If _auto_update_heights = True, O(log n) (where n is the number of nodes in the tree) because it will update the heights of all nodes above it up to the root, 
+    so at most height(tree) operations and for an avl tree height(tree) = O(log n). 
+    If _auto_update_heights = False, O(1)
+    """
     @right.setter
     def right(self, val: (Self | None)):
         self._raise_if_virtual_node()
@@ -78,10 +90,6 @@ class AVLNode(object):
     @property
     def parent(self):
         return self._parent
-
-    @property
-    def height(self):
-        return self._height
 
     """
     @returns: (height of left node) - (height of right node).
@@ -102,20 +110,30 @@ class AVLNode(object):
             raise RuntimeError('Invalid operation on virtual node.')
 
     def _update_height(self):
-        self._height = max(self.left.height, self.right.height) + 1
+        self.height = max(self.left.height, self.right.height) + 1
 
+    """
+    Time complexity: O(log n) (where n is the number of nodes in the tree) because it will update the heights of all nodes above it up to the root, 
+    so at most height(tree) operations and for an avl tree height(tree) = O(log n).
+    """
     def _update_heights_up(self):
         h = 0
         while self is not None:
             new_height = max(self.left.height, self.right.height) + 1
-            if new_height > self._height:
+            if new_height > self.height:
                 h += 1
-            elif new_height == self._height and AVLNode._auto_update_heights:
+            elif new_height == self.height and AVLNode._auto_update_heights:
                 break
-            self._height = new_height
+            self.height = new_height
             self = self.parent
         return h
 
+    """
+    Time complexity: 
+    If _auto_update_heights = False, O(log n) (where n is the number of nodes in the tree) because it will update the heights of all nodes above it up to the root, 
+    so at most height(tree) operations and for an avl tree height(tree) = O(log n). 
+    If _auto_update_heights = True, O(1)
+    """
     def rotate_right(self):
         left = self.left
         right_of_left = left.right
@@ -130,6 +148,12 @@ class AVLNode(object):
             self._update_height()
             self.parent._update_height()
     
+    """
+    Time complexity: 
+    If _auto_update_heights = False, O(log n) (where n is the number of nodes in the tree) because it will update the heights of all nodes above it up to the root, 
+    so at most height(tree) operations and for an avl tree height(tree) = O(log n). 
+    If _auto_update_heights = True, O(1)
+    """
     def rotate_left(self):
         right = self.right
         left_of_right = right.left
@@ -173,8 +197,12 @@ class AVLTree(object):
                 raise ValueError("root must not have child nodes nor parent.")
             self._max = self.root
 
-    """searches for a node in the dictionary corresponding to the key (starting at the root)
-        
+    """
+    searches for a node in the dictionary corresponding to the key (starting at the root)
+    
+    Time complexity: (from _search_core which is what does the work) O(log n) (where n is the number of nodes in the tree), because worst case it will traverse to the leaf with the highest depth, 
+    which is equal to the height of the root aka the height of the tree which is log n for an avl tree.
+
     @type key: int
     @param key: a key to be searched
     @rtype: (AVLNode,int)
@@ -188,6 +216,9 @@ class AVLTree(object):
         return x, e
 
     """
+    Time complexity: O(log n) (where n is the number of nodes in the tree), because worst case it will traverse to the leaf with the highest depth, 
+    which is equal to the height of the root aka the height of the tree which is log n for an avl tree.
+
     @returns: a tuple (x, e, found) where x is the node if found, else last node checked
     """
     @staticmethod
@@ -205,8 +236,12 @@ class AVLTree(object):
 
         return AVLTree._search_core(node.right, key, e + 1)
 
-    """searches for a node in the dictionary corresponding to the key, starting at the max
-        
+    """
+    searches for a node in the dictionary corresponding to the key, starting at the max
+    
+    Time complexity: (from _finger_search_core which is what does the work) O(log n) (where n is the number of nodes in the tree), because worst case it will traverse up from the max to the root and down to a leaf with the highest depth, 
+    which is at most 2height(tree) and for an avl tree height(tree) = log n so time complexity is O(2log n) = O(log n).
+
     @type key: int
     @param key: a key to be searched
     @rtype: (AVLNode,int)
@@ -219,6 +254,10 @@ class AVLTree(object):
             x = None
         return x, e
 
+    """
+    Time complexity: O(log n) (where n is the number of nodes in the tree), because worst case it will traverse up from the max to the root and down to a leaf with the highest depth, 
+    which is at most 2height(tree) and for an avl tree height(tree) = log n so time complexity is O(2log n) = O(log n).
+    """
     @staticmethod
     def _finger_search_core(node: AVLNode, key: int, e: int) -> Tuple[(AVLNode | None), int, bool]:
         if not _is_real(node): # iff self.max_node() is None iff self.root is None
@@ -237,7 +276,10 @@ class AVLTree(object):
         
         return AVLTree._finger_search_core(node.parent, key, e + 1)
 
-    """inserts a new node into the dictionary with corresponding key and value (starting at the root)
+    """
+    inserts a new node into the dictionary with corresponding key and value (starting at the root)
+
+    Time complexity: O(log n) = Complexity(_search_core) + Complexity(_insert_core) = O(log n) + O(log n)
 
     @type key: int
     @pre: key currently does not appear in the dictionary
@@ -253,6 +295,9 @@ class AVLTree(object):
         parent, e, found = AVLTree._search_core(self.root, key, 1)
         return self._insert_core(key, val, parent, e, found)
 
+    """
+    Time complexity: O(log n) = Complexity(_update_heights_and_rebalance) because everything is O(1) except for _update_heights_and_rebalance (setting node.left or node.right is O(1) since AVLNode._auto_update_heights = False)
+    """
     def _insert_core(self, key: int, val: str, parent: (AVLNode | None), e: int, found: bool) -> Tuple[AVLNode, int, int]:
         if found:
             parent.value = val
@@ -284,20 +329,23 @@ class AVLTree(object):
 
         return new_node, e, h
 
+    """
+    Time complexity: O(log n), Complexity(_rebalance) = O(1) since AVLNode._auto_update_heights = False, so worst we traverse up to the root in order to update the heights and/or do rotations which are O(1) as stated earlier,
+    and traversing up to the root is O(height(tree)) = O(log n).
+    """
     def _update_heights_and_rebalance(self, node: (AVLNode | None), prev_bf: int):
         assert AVLNode._auto_update_heights == False
 
         h = 0
         while node is not None:
-            # node._update_height()
-            assert node._height == max(node.left.height, node.right.height) + 1
+            assert node.height == max(node.left.height, node.right.height) + 1
 
             if node.parent is None:
                 return h
             
             if prev_bf == 0: # case 1
                 prev_bf = node.parent.parent.balance_factor if node.parent.parent is not None else None
-                node.parent._height += 1
+                node.parent.height += 1
                 h += 1
                 node = node.parent
                 continue
@@ -315,7 +363,10 @@ class AVLTree(object):
         return h
         
 
-    """inserts a new node into the dictionary with corresponding key and value, starting at the max
+    """
+    inserts a new node into the dictionary with corresponding key and value, starting at the max
+
+    Time complexity: O(log n) = Complexity(_finger_search_core) + Complexity(_insert_core) = O(log n) + O(log n)
 
     @type key: int
     @pre: key currently does not appear in the dictionary
@@ -331,7 +382,12 @@ class AVLTree(object):
         parent, e, found = AVLTree._finger_search_core(self.max_node(), key, 1)
         return self._insert_core(key, val, parent, e, found)
 
-    """deletes node from the dictionary
+    """
+    deletes node from the dictionary
+
+    Time complexitY: O(log n), calculating max is O(log n) and deleting the node itself is O(log n) worst case in case we need to update all the heights
+    (which is done when setting a child node, as explaned in the property setters in AVLNode), and rebalancing is O(log n) worst case in case we need to rebalance all the way up to the root
+    (rotations themselves are O(1)). So O(3log n) = O(log n)
 
     @type node: AVLNode
     @pre: node is a real pointer to a node in self
@@ -363,6 +419,8 @@ class AVLTree(object):
         self._max = _get_max(self.root)
 
     """joins self with item and another AVLTree
+
+    Time complexity: O(log n) as proved in the lecture.
 
     @type tree2: AVLTree 
     @param tree2: a dictionary to be joined with self
@@ -434,6 +492,8 @@ class AVLTree(object):
 
     """splits the dictionary at a given node
 
+    Time complexity: O(log n) as proved in the lecture.
+
     @type node: AVLNode
     @pre: node is in self
     @param node: the node in the dictionary to be used for the split
@@ -476,8 +536,11 @@ class AVLTree(object):
         assert larger._max is _get_max(larger.root)
         return smaller, larger
 
-    """returns an array representing dictionary 
+    """
+    returns an array representing dictionary
 
+    Time complexity: O(n) since we need to iterate over all of the nodes in order to add them to the list.
+    
     @rtype: list
     @returns: a sorted list according to key of touples (key, value) representing the data structure
     """
@@ -500,7 +563,7 @@ class AVLTree(object):
     @returns: the maximal node, None if the dictionary is empty
     """
     def max_node(self) -> (AVLNode | None):
-        assert _get_max(self.root) is self._max # TODO: remove before submitting
+        # assert _get_max(self.root) is self._max # TODO: remove before submitting
         return self._max
 
     """returns the number of items in dictionary 
@@ -525,6 +588,9 @@ class AVLTree(object):
     def get_root(self) -> AVLNode:
         return self.root
 
+    """
+    Time complexity: O(1) if AVLNode._auto_update_heights = False, otherwise O(log n) in case we need to update the heights all the way up to the root.
+    """
     def _rebalance(self, node: AVLNode) -> int:
         assert _is_real(node)
 
@@ -556,6 +622,9 @@ class AVLTree(object):
 
         return
 
+    """
+    Time complexity: O(log n) in case we need to rebalance all the way to the root.
+    """
     def _rebalance_up_from(self, node: AVLNode):
         while node is not None:
             self._rebalance(node)
@@ -565,6 +634,9 @@ class AVLTree(object):
 def _is_real(node: (AVLNode | None)):
     return node is not None and node.is_real_node()
 
+"""
+O(log n) because worst case the max node has the highest depth which is height(tree) = log n
+"""
 def _get_max(node: AVLNode) -> (AVLNode | None):
     if _is_real(node):
         while _is_real(node.right):
@@ -577,11 +649,11 @@ def _swap_nodes(old: AVLNode, new: AVLNode):
     def swap_parent_child(parent: AVLNode, child: AVLNode):
         child_left = child._left
         child_right = child._right
-        child_height = child._height
+        child_height = child.height
 
         child._parent = parent._parent
-        child._height = parent._height
-        parent._height = child_height
+        child.height = parent.height
+        parent.height = child_height
         parent._parent = child
 
         if parent._left is child:
@@ -615,14 +687,14 @@ def _swap_nodes(old: AVLNode, new: AVLNode):
     new_left = new._left
     new_right = new._right
     new_parent = new._parent
-    new_height = new._height
+    new_height = new.height
 
     new._left = old._left
     new._left._parent = new
     new._right = old._right
     new._right._parent = new
     new._parent = old._parent
-    new._height = old._height
+    new.height = old.height
 
     if old._parent is not None:
         if old._parent._left is old:
@@ -635,7 +707,7 @@ def _swap_nodes(old: AVLNode, new: AVLNode):
     old._right = new_right
     old._right._parent = old
     old._parent = new_parent
-    old._height = new_height
+    old.height = new_height
 
     if new_parent is not None:
         if new_parent._left is new:

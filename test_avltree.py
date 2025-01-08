@@ -2,7 +2,7 @@ from typing import Optional
 import pytest
 from interfaces import AVLNodeProtocol, AVLTreeProtocol
 from AVLTree import AVLTree, AVLNode
-from test import Printer
+# from test import Printer
 
 def pre_order_keys_recursive(node: Optional[AVLNodeProtocol]) -> list[int]:
     if node is None or not node.is_real_node():
