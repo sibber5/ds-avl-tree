@@ -22,7 +22,7 @@ class AVLNode(object):
         if key is None:
             self.key = None
             self._parent: AVLNode = None
-            self.height = -1
+            self._height = -1
         else:
             self.key = key
             self.value = value
@@ -31,7 +31,7 @@ class AVLNode(object):
             self._right = AVLNode.virtual()
             self._right._parent = self
             self._parent: AVLNode = None
-            self.height = 0
+            self._height = 0
 
     @classmethod
     def virtual(cls):
@@ -39,7 +39,9 @@ class AVLNode(object):
 
     @property
     def left(self) -> Self:
-        self._raise_if_virtual_node()
+        if not self.is_real_node():
+            return None
+        # self._raise_if_virtual_node()
         return self._left
 
     """
@@ -64,7 +66,9 @@ class AVLNode(object):
 
     @property
     def right(self) -> Self:
-        self._raise_if_virtual_node()
+        if not self.is_real_node():
+            return None
+        # self._raise_if_virtual_node()
         return self._right
     
     """
@@ -91,6 +95,10 @@ class AVLNode(object):
     def parent(self):
         return self._parent
 
+    @property
+    def height(self):
+        return self._height
+
     """
     @returns: (height of left node) - (height of right node).
     """
@@ -110,7 +118,7 @@ class AVLNode(object):
             raise RuntimeError('Invalid operation on virtual node.')
 
     def _update_height(self):
-        self.height = max(self.left.height, self.right.height) + 1
+        self._height = max(self.left.height, self.right.height) + 1
 
     """
     Time complexity: O(log n) (where n is the number of nodes in the tree) because it will update the heights of all nodes above it up to the root, 
@@ -120,11 +128,11 @@ class AVLNode(object):
         h = 0
         while self is not None:
             new_height = max(self.left.height, self.right.height) + 1
-            if new_height > self.height:
+            if new_height > self._height:
                 h += 1
-            elif new_height == self.height and AVLNode._auto_update_heights:
+            elif new_height == self._height and AVLNode._auto_update_heights:
                 break
-            self.height = new_height
+            self._height = new_height
             self = self.parent
         return h
 
@@ -338,14 +346,14 @@ class AVLTree(object):
 
         h = 0
         while node is not None:
-            assert node.height == max(node.left.height, node.right.height) + 1
+            assert node._height == max(node.left.height, node.right.height) + 1
 
             if node.parent is None:
                 return h
             
             if prev_bf == 0: # case 1
                 prev_bf = node.parent.parent.balance_factor if node.parent.parent is not None else None
-                node.parent.height += 1
+                node.parent._height += 1
                 h += 1
                 node = node.parent
                 continue
@@ -591,7 +599,7 @@ class AVLTree(object):
     """
     Time complexity: O(1) if AVLNode._auto_update_heights = False, otherwise O(log n) in case we need to update the heights all the way up to the root.
     """
-    def _rebalance(self, node: AVLNode) -> int:
+    def _rebalance(self, node: AVLNode):
         assert _is_real(node)
 
         if abs(node.balance_factor) < 2:
@@ -613,11 +621,9 @@ class AVLTree(object):
                 assert node.balance_factor < -1 and node.right.is_real_node() and node.right.balance_factor > 0 and node.right.left.is_real_node()
                 node.right.rotate_right()
                 node.rotate_left()
-        
-        subtree_root = node.parent
 
         if self.root is node:
-            self.root = subtree_root
+            self.root = node.parent
             assert self.root.parent is None
 
         return
@@ -649,11 +655,11 @@ def _swap_nodes(old: AVLNode, new: AVLNode):
     def swap_parent_child(parent: AVLNode, child: AVLNode):
         child_left = child._left
         child_right = child._right
-        child_height = child.height
+        child_height = child._height
 
         child._parent = parent._parent
-        child.height = parent.height
-        parent.height = child_height
+        child._height = parent._height
+        parent._height = child_height
         parent._parent = child
 
         if parent._left is child:
@@ -687,14 +693,14 @@ def _swap_nodes(old: AVLNode, new: AVLNode):
     new_left = new._left
     new_right = new._right
     new_parent = new._parent
-    new_height = new.height
+    new_height = new._height
 
     new._left = old._left
     new._left._parent = new
     new._right = old._right
     new._right._parent = new
     new._parent = old._parent
-    new.height = old.height
+    new._height = old._height
 
     if old._parent is not None:
         if old._parent._left is old:
@@ -707,7 +713,7 @@ def _swap_nodes(old: AVLNode, new: AVLNode):
     old._right = new_right
     old._right._parent = old
     old._parent = new_parent
-    old.height = new_height
+    old._height = new_height
 
     if new_parent is not None:
         if new_parent._left is new:
